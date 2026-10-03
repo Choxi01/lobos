@@ -236,11 +236,12 @@
   function resultadoVidente(s) {
     const id = sel.ids[0];
     if (id == null) return "";
-    const j = s.jugadores[id], d = rol(j.rol);
+    // La vidente solo pregunta «¿es lobo?»: pulgar arriba si lo es, abajo si no.
+    const j = s.jugadores[id];
     const lobo = j.rol === "lobo";
     return `<div class="resultado ${lobo ? "malo" : "bueno"} secreto">
-      <span class="carta-emoji chica">${d.emoji}</span>
-      <div><b>${esc(j.nombre)}</b> es <b>${E.nombreRol(j)}</b><small>${lobo ? "👎 Pulgar abajo: es lobo" : "👍 Pulgar arriba: no es lobo"}</small></div></div>`;
+      <span class="carta-emoji chica">${lobo ? "👍" : "👎"}</span>
+      <div><b>Pulgar ${lobo ? "arriba" : "abajo"}</b>: ${esc(j.nombre)} ${lobo ? "es lobo" : "no es lobo"}<small>Rol: ${E.nombreRol(j)} (no se lo digas)</small></div></div>`;
   }
 
   // Lista de jugadores para tocar. modo define quién se puede elegir.

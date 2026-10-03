@@ -18,8 +18,8 @@
     }),
     vidente: () => ({
       titulo: "La vidente",
-      leer: "Vidente, despertate. Señalá a la persona cuyo verdadero rol querés conocer.",
-      nota: "Tocá a quién señaló. Mostrale el resultado: la carta, o pulgar abajo si es lobo y arriba si no.",
+      leer: "Vidente, despertate. Señalá a la persona que sospechás que es lobo.",
+      nota: "Tocá a quién señaló y mostrale el resultado con la mano: pulgar arriba si es lobo, pulgar abajo si no.",
       cerrar: "Vidente, cerrá los ojos.",
     }),
     protector: () => ({

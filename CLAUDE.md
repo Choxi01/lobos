@@ -33,6 +33,7 @@ Después de cada muerte (también si el narrador saca a alguien) disparan los ca
 ## Reglas decididas
 - Lobos ganan cuando son tantos como el resto. Aldea gana sin lobos.
 - Protector no repite (configurable).
+- Vidente solo pregunta «¿es lobo?»: pulgar arriba si es lobo, pulgar abajo si no (no ve el rol).
 - Maldito: si lo atacan los lobos (sin protección) no muere, pasa a `rol: "lobo"` con `origen: "maldito"` y se despierta con la manada desde la noche siguiente.
 - Votación: contador por jugador; con empate, segunda vuelta entre los empatados o decide la mesa.
 - Se sacaron bruja, cupido, anciano y tonto del pueblo (no se usaban); están en el historial de git.

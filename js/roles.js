@@ -20,7 +20,7 @@
     vidente: {
       nombre: "Vidente", plural: "Videntes", emoji: "🔮", equipo: "aldea", peso: 7, max: 1,
       despierta: "Todas las noches",
-      desc: "Cada noche señala a un jugador y el narrador le muestra su rol en secreto.",
+      desc: "Cada noche señala a un jugador y el narrador le responde en secreto si es lobo: pulgar arriba si lo es, pulgar abajo si no.",
       consejo: "Si te descubren, los lobos te van a buscar. Elegí bien cuándo contar lo que sabés.",
     },
     protector: {
@@ -38,7 +38,7 @@
     maldito: {
       nombre: "Maldito", plural: "Malditos", emoji: "🧛", equipo: "aldea", peso: -2, max: 1,
       despierta: "Nunca (hasta que lo muerden)",
-      desc: "Empieza en la aldea, pero si los lobos lo atacan no muere: se convierte en lobo y desde la noche siguiente se despierta con la manada. Mientras no lo muerdan, la vidente lo ve como aldeano.",
+      desc: "Empieza en la aldea, pero si los lobos lo atacan no muere: se convierte en lobo y desde la noche siguiente se despierta con la manada. Mientras no lo muerdan, para la vidente no es lobo (pulgar abajo).",
       consejo: "Si te convertís, nadie se entera: seguí actuando como antes.",
     },
   };
