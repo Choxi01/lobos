@@ -16,18 +16,6 @@
       ], r),
       nota: "Esperá a que todos tengan los ojos cerrados. Pediles que golpeen suave la mesa con las manos para tapar los ruidos.",
     }),
-    cupido: () => ({
-      titulo: "Cupido",
-      leer: "Cupido, despertate. Señalá a las dos personas que se van a enamorar perdidamente.",
-      nota: "Tocá a los dos que señale (puede elegirse a sí mismo). Después tocales la cabeza a los dos enamorados, despacito.",
-      cerrar: "Cupido, cerrá los ojos.",
-    }),
-    enamorados: () => ({
-      titulo: "Los enamorados",
-      leer: "Las dos personas a las que les toqué la cabeza: abran los ojos y mírense. Están enamorados: si uno muere, el otro muere de pena.",
-      nota: "Dejá que se reconozcan unos segundos.",
-      cerrar: "Enamorados, cierren los ojos.",
-    }),
     vidente: () => ({
       titulo: "La vidente",
       leer: "Vidente, despertate. Señalá a la persona cuyo verdadero rol querés conocer.",
@@ -48,12 +36,7 @@
       nota: r === 1 ? "Primera noche: dejá que se reconozcan. Tienen que elegir una sola víctima, señalándola." : "Tienen que coincidir en una sola víctima.",
       cerrar: "Lobos, cierren los ojos.",
     }),
-    bruja: () => ({
-      titulo: "La bruja",
-      leer: "Bruja, despertate. Esta noche los lobos atacaron a esta persona… (señalala). ¿Querés usar tu poción de vida para salvarla? ¿Y tu poción de muerte con alguien?",
-      nota: "Señalale la víctima con el dedo. Ella responde con gestos: sí o no para la vida, y a quién para la muerte.",
-      cerrar: "Bruja, cerrá los ojos.",
-    }),
+    convertido: n => `🧛 ${n} es el Maldito y anoche lo mordieron: ahora es lobo. Tocale la cabeza para que abra los ojos con la manada.`,
   };
 
   const DIA = {
@@ -66,8 +49,6 @@
     sinMuertos: "…y milagrosamente esta noche no murió nadie.",
     muerte: {
       lobos: n => `…y encuentran el cuerpo de ${n} en la plaza. Los lobos pasaron por acá.`,
-      bruja: n => `…y ${n} no se despierta. Nadie sabe bien qué le pasó.`,
-      pena: n => `${n} no soporta perder a su amor y muere de pena.`,
       cazador: n => `¡PUM! ${n} cae bajo el disparo del cazador.`,
       linchado: n => `El pueblo decidió: ${n} es llevado a la horca.`,
       narrador: n => `${n} deja el juego.`,
@@ -76,9 +57,9 @@
     debate: min => `Ahora el pueblo debate: entre ustedes se esconde algún lobo. Tienen ${min} para decidir a quién linchar.`,
     debateNota: "Los muertos no hablan ni votan. Si el debate se estanca, podés cortarlo antes.",
     votacion: "Se terminó el tiempo. A la cuenta de tres, todos señalan a quien quieren linchar. Uno… dos… ¡tres!",
-    votacionNota: "Tocá al más votado. Si hay empate, decidan en la mesa si desempatan o no se lincha a nadie.",
+    votacionNota: "Preguntá por cada uno «¿Quién vota a…?» y sumá los votos con +. Los muertos no votan.",
+    segundaVuelta: nombres => `¡Empate! Segunda vuelta: todos votan de nuevo, pero solo entre ${nombres}. Uno… dos… ¡tres!`,
     nadieLinchado: "El pueblo no se pone de acuerdo y hoy nadie va a la horca.",
-    tonto: n => `¡Esperen! ${n} era el Tonto del pueblo. Lo perdonan por tonto, pero desde ahora ya no vota.`,
     cazador: n => `${n} era el Cazador. Antes de caer, levanta la escopeta… ¿A quién te llevás con vos?`,
     cazadorNota: "Que señale a alguien. Puede decidir no disparar.",
     noDisparo: n => `${n} baja la escopeta y no dispara.`,
@@ -88,7 +69,6 @@
   const FIN = {
     lobos: { titulo: "¡Ganan los lobos!", leer: "Los lobos se comieron al último inocente. El pueblo quedó en manos de la manada." },
     aldea: { titulo: "¡Gana la aldea!", leer: "Cayó el último lobo. El pueblo por fin puede dormir tranquilo." },
-    enamorados: { titulo: "¡Ganan los enamorados!", leer: "Contra todo y contra todos, los dos enamorados quedan solos en el pueblo. El amor ganó." },
     nadie: { titulo: "No queda nadie", leer: "El pueblo quedó vacío. Nadie gana esta vez." },
   };
 

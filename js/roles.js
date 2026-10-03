@@ -29,40 +29,22 @@
       desc: "Cada noche elige a alguien (puede ser él mismo) y, si los lobos lo atacan, esa noche no muere. No puede proteger a la misma persona dos noches seguidas.",
       consejo: "Proteger a quien parece la vidente suele ser buena idea.",
     },
-    bruja: {
-      nombre: "Bruja", plural: "Brujas", emoji: "🧪", equipo: "aldea", peso: 4, max: 1,
-      despierta: "Todas las noches, después de los lobos",
-      desc: "Tiene dos pociones para toda la partida: una de vida (salva a la víctima de los lobos) y una de muerte (mata a quien quiera). Puede usar las dos la misma noche.",
-      consejo: "La poción de muerte es tu mejor arma cuando estás segura de quién es lobo.",
-    },
     cazador: {
       nombre: "Cazador", plural: "Cazadores", emoji: "🏹", equipo: "aldea", peso: 3, max: 1,
       despierta: "No se despierta: actúa al morir",
       desc: "Cuando muere (de noche o linchado) dispara su último tiro y se lleva a otro jugador con él.",
       consejo: "Pensá antes a quién te llevarías.",
     },
-    cupido: {
-      nombre: "Cupido", plural: "Cupidos", emoji: "💘", equipo: "aldea", peso: -3, max: 1,
-      despierta: "Solo la primera noche",
-      desc: "La primera noche flecha a dos jugadores (puede elegirse a sí mismo). Si un enamorado muere, el otro muere de pena. Si son de equipos distintos, ganan solos cuando quedan los dos últimos.",
-      consejo: "Unir a un lobo con un aldeano le cambia el juego a todos.",
-    },
-    anciano: {
-      nombre: "Anciano", plural: "Ancianos", emoji: "👴", equipo: "aldea", peso: 3, max: 1,
-      despierta: "Nunca",
-      desc: "Es duro de roer: sobrevive al primer ataque de los lobos. La segunda vez muere. La poción de la bruja y el linchamiento lo matan igual.",
-      consejo: "Si sobrevivís a un ataque, el pueblo no se entera: usalo a tu favor.",
-    },
-    tonto: {
-      nombre: "Tonto del pueblo", plural: "Tontos", emoji: "🤪", equipo: "aldea", peso: 2, max: 1,
-      despierta: "Nunca",
-      desc: "Si el pueblo lo lincha, se revela su rol y se salva, pero desde ese momento ya no puede votar. Los lobos sí lo pueden matar.",
-      consejo: "Hacerte el sospechoso puede ser una trampa útil.",
+    maldito: {
+      nombre: "Maldito", plural: "Malditos", emoji: "🧛", equipo: "aldea", peso: -2, max: 1,
+      despierta: "Nunca (hasta que lo muerden)",
+      desc: "Empieza en la aldea, pero si los lobos lo atacan no muere: se convierte en lobo y desde la noche siguiente se despierta con la manada. Mientras no lo muerdan, la vidente lo ve como aldeano.",
+      consejo: "Si te convertís, nadie se entera: seguí actuando como antes.",
     },
   };
 
   // Orden en que se muestran los roles al configurar.
-  const ORDEN = ["lobo", "vidente", "protector", "bruja", "cazador", "cupido", "anciano", "tonto", "aldeano"];
+  const ORDEN = ["lobo", "vidente", "protector", "cazador", "maldito", "aldeano"];
   const ESPECIALES = ORDEN.filter(r => r !== "aldeano");
 
   const MIN_JUGADORES = 5;
@@ -79,7 +61,7 @@
   }
 
   // Desde cuántos jugadores conviene sumar cada rol especial.
-  const DESDE = { vidente: 5, protector: 6, bruja: 8, cazador: 9, cupido: 10, anciano: 12, tonto: 13 };
+  const DESDE = { vidente: 5, protector: 6, cazador: 8, maldito: 10 };
 
   function recomendar(n) {
     const c = { lobo: lobosRecomendados(n) };
@@ -138,15 +120,10 @@
     return Math.random();
   }
 
-  // ¿Quién ganó? null si la partida sigue.
-  // jugadores: [{id, rol, vivo}], enamorados: [id, id] o null
-  function ganador(jugadores, enamorados) {
+  // ¿Quién ganó? null si la partida sigue. jugadores: [{id, rol, vivo}]
+  function ganador(jugadores) {
     const vivos = jugadores.filter(j => j.vivo);
     if (!vivos.length) return "nadie";
-    if (enamorados && vivos.length === 2 && enamorados.every(id => vivos.some(v => v.id === id))) {
-      const eq = enamorados.map(id => equipo(jugadores[id].rol));
-      if (eq[0] !== eq[1]) return "enamorados";
-    }
     const lobos = vivos.filter(j => j.rol === "lobo").length;
     if (lobos === 0) return "aldea";
     if (lobos >= vivos.length - lobos) return "lobos";
@@ -158,11 +135,9 @@
   function pasosNoche(ronda, hay, vive, fingir) {
     const incluir = r => vive(r) || (fingir && hay(r));
     const p = ["anochecer"];
-    if (ronda === 1 && hay("cupido")) p.push("cupido", "enamorados");
     if (incluir("vidente")) p.push("vidente");
     if (incluir("protector")) p.push("protector");
     p.push("lobos");
-    if (incluir("bruja")) p.push("bruja");
     return p;
   }
 

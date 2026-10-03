@@ -16,6 +16,17 @@
   --aldea: #82d1a8; --aldea-fondo: rgba(130,209,168,.1);
   --carta: #f7f3e8; --tinta: #1b1d22;
 }
+/* Noche con la pantalla oscura: negro y letra tenue para que el brillo no se note con los ojos cerrados. */
+body[data-fase="oscuro"] {
+  color-scheme: dark;
+  --fondo: #000; --fondo2: #000; --linea: #1d1f2b; --linea-suave: rgba(255,255,255,.05);
+  --vidrio: rgba(255,255,255,.03); --vidrio2: rgba(255,255,255,.04);
+  --texto: #a9adbf; --tenue: #636781;
+  --acento: #a8925c; --sobre-acento: #000; --brillo: rgba(168,146,92,.06);
+  --sangre: #a8505d; --sangre-fondo: rgba(168,80,93,.1);
+  --aldea: #5f9479; --aldea-fondo: rgba(95,148,121,.08);
+  --carta: #f7f3e8; --tinta: #1b1d22;
+}
 body[data-fase="dia"] {
   color-scheme: light;
   --fondo: #f8eed9; --fondo2: #efdfbf; --linea: #d8c299; --linea-suave: rgba(60,40,10,.09);
@@ -181,6 +192,16 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .fila-sel { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 700; }
 .fila-sel select { background: var(--fondo2); border: 1px solid var(--linea); border-radius: 10px; padding: 8px; max-width: 60%; }
 
+/* Contador de votos */
+.lista-votos { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.fila-voto { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center; padding: 4px 6px 4px 4px; border-radius: 12px; background: var(--vidrio); border: 1px solid var(--linea); }
+.fila-voto.lider { border-color: var(--sangre); background: var(--sangre-fondo); }
+.voto-nombre { background: none; border: 0; text-align: left; font-weight: 800; padding: 10px 8px; min-height: 44px; overflow-wrap: anywhere; }
+.veredicto-votos { text-align: center; font-size: 1.05rem; margin: 6px 0 10px; }
+.empate { display: flex; flex-direction: column; gap: 8px; padding: 12px; margin-bottom: 10px; border-radius: 14px; border: 1px dashed var(--sangre); }
+.empate .veredicto-votos, .empate .etiqueta { margin: 0; }
+.progreso.error { color: var(--sangre); }
+
 /* Reloj del debate */
 .reloj { margin: 14px 0; padding: 14px; border-radius: 16px; border: 1px solid var(--linea); background: var(--vidrio); text-align: center; }
 .reloj-num { font-family: var(--display); font-size: 4rem; line-height: 1; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
@@ -286,4 +307,5 @@ tr:last-child td { border-bottom: 0; }
 
 /* Ajustes */
 html:has(body[data-fase="dia"]) { background: #efdfbf; }
+html:has(body[data-fase="oscuro"]) { background: #000; }
 .jug.nadie[aria-pressed="true"] { color: var(--sobre-acento); border-style: solid; }

@@ -41,7 +41,7 @@ prueba("lobos recomendados", () => {
 });
 prueba("recomendación de 8 jugadores", () => {
   const c = R.recomendar(8);
-  igual([c.lobo, c.vidente, c.protector, c.bruja, c.cazador], [2, 1, 1, 1, 0]);
+  igual([c.lobo, c.vidente, c.protector, c.cazador, c.maldito], [2, 1, 1, 1, 0]);
   igual(R.aldeanos(c, 8), 3);
 });
 prueba("validación", () => {
@@ -51,7 +51,7 @@ prueba("validación", () => {
   igual(R.validar({ lobo: 2, vidente: 1 }, 8).ok, true);
 });
 prueba("sorteo reparte la cantidad justa", () => {
-  const m = R.sortear(10, { lobo: 2, vidente: 1, bruja: 1 });
+  const m = R.sortear(10, { lobo: 2, vidente: 1, maldito: 1 });
   igual(m.length, 10);
   igual(m.filter(r => r === "lobo").length, 2);
   igual(m.filter(r => r === "aldeano").length, 6);
@@ -59,16 +59,14 @@ prueba("sorteo reparte la cantidad justa", () => {
 
 console.log("Ganador");
 const J = (roles, muertos = []) => roles.map((rol, id) => ({ id, rol, vivo: !muertos.includes(id) }));
-prueba("aldea gana sin lobos", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano"], [0]), null), "aldea"));
-prueba("lobos ganan con paridad", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano"], [1]), null), "lobos"));
-prueba("sigue la partida", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano", "aldeano"]), null), null));
-prueba("enamorados de distinto equipo ganan solos", () =>
-  igual(R.ganador(J(["lobo", "aldeano", "aldeano"], [2]), [0, 1]), "enamorados"));
+prueba("aldea gana sin lobos", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano"], [0])), "aldea"));
+prueba("lobos ganan con paridad", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano"], [1])), "lobos"));
+prueba("sigue la partida", () => igual(R.ganador(J(["lobo", "aldeano", "aldeano", "aldeano"])), null));
 
 console.log("Noche");
-prueba("pasos de la primera noche con cupido", () => {
-  const j = partida(["lobo", "vidente", "protector", "bruja", "cupido", "aldeano"]);
-  igual(j.S.pasos, ["anochecer", "cupido", "enamorados", "vidente", "protector", "lobos", "bruja"]);
+prueba("pasos de la noche", () => {
+  const j = partida(["lobo", "vidente", "protector", "cazador", "maldito", "aldeano"]);
+  igual(j.S.pasos, ["anochecer", "vidente", "protector", "lobos"]);
 });
 prueba("ataque de lobos mata", () => {
   const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
@@ -85,22 +83,22 @@ prueba("protector salva y no repite", () => {
   ok(av(j)); // anochecer
   igual(av(j, { id: 2 }).ok, false, "no debería repetir");
 });
-prueba("bruja cura y envenena", () => {
-  const j = partida(["lobo", "bruja", "aldeano", "aldeano", "aldeano", "lobo", "aldeano"]);
-  noche(j, { lobos: { id: 2 }, bruja: { curar: true, veneno: 5 } });
-  igual(j.S.anuncio, [{ id: 5, causa: "bruja" }]);
-  igual([j.S.mem.vida, j.S.mem.muerte], [false, false]);
-});
-prueba("anciano resiste el primer ataque", () => {
-  const j = partida(["lobo", "anciano", "aldeano", "aldeano", "aldeano"]);
-  noche(j, { lobos: { id: 1 } });
+prueba("maldito mordido se convierte en lobo", () => {
+  const j = partida(["lobo", "maldito", "vidente", "aldeano", "aldeano", "aldeano", "aldeano"]);
+  noche(j, { vidente: { id: 1 }, lobos: { id: 1 } });
   igual(j.S.anuncio, []);
-  igual(j.S.mem.ancianoHerido, true);
+  igual([j.S.jugadores[1].rol, j.S.jugadores[1].origen, j.S.jugadores[1].vivo], ["lobo", "maldito", true]);
+  igual(j.S.registro.some(x => x.t.includes("miró a J1: Maldito")), true, "antes de la mordida es maldito");
+  ok(av(j)); ok(av(j)); ok(av(j, { nadie: true })); ok(av(j));
+  ok(av(j)); ok(av(j, { id: 1 }));
+  igual(j.S.registro.some(x => x.t.includes("J1: Lobo (era Maldito)")), true);
+  igual(av(j, { id: 1 }).ok, false, "los lobos no se atacan entre ellos");
 });
-prueba("enamorado muere de pena", () => {
-  const j = partida(["lobo", "cupido", "aldeano", "aldeano", "aldeano", "aldeano"]);
-  noche(j, { cupido: { ids: [2, 3] }, lobos: { id: 2 } });
-  igual(j.S.anuncio, [{ id: 2, causa: "lobos" }, { id: 3, causa: "pena" }]);
+prueba("maldito convertido cuenta para la paridad", () => {
+  const j = partida(["lobo", "maldito", "aldeano", "aldeano", "aldeano"]);
+  noche(j, { lobos: { id: 1 } });
+  ok(av(j)); ok(av(j)); ok(av(j, { id: 2 })); ok(av(j));
+  igual([j.S.fase, j.S.ganador], ["fin", "lobos"]);
 });
 prueba("roles muertos se llaman igual para disimular", () => {
   const j = partida(["lobo", "vidente", "aldeano", "aldeano", "aldeano", "aldeano"]);
@@ -122,13 +120,12 @@ prueba("cazador dispara al morir y después gana la aldea", () => {
   ok(av(j));
   igual([j.S.fase, j.S.ganador], ["fin", "aldea"]);
 });
-prueba("tonto del pueblo se salva una vez", () => {
-  const j = partida(["lobo", "tonto", "aldeano", "aldeano", "aldeano", "aldeano"]);
-  noche(j, { lobos: { id: 2 } });
+prueba("los votos quedan en el registro", () => {
+  const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
+  noche(j, { lobos: { id: 1 } });
   ok(av(j)); ok(av(j));
-  ok(av(j, { id: 1 }));
-  igual(j.S.jugadores[1].vivo, true);
-  igual(j.S.mem.tontoRevelado, true);
+  ok(av(j, { id: 2, votos: { 2: 3, 0: 1, 3: 0 }, segunda: true }));
+  igual(j.S.registro.some(x => x.t === "🗳️ Votos (segunda vuelta): J2 3 · J0 1."), true);
 });
 prueba("linchar al último lobo termina la partida", () => {
   const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
@@ -144,12 +141,40 @@ prueba("lobos ganan al llegar a la paridad", () => {
   ok(av(j));
   igual(j.S.ganador, "lobos");
 });
+prueba("sacar al cazador lo hace disparar enseguida", () => {
+  const j = partida(["lobo", "cazador", "aldeano", "aldeano", "aldeano", "aldeano"]);
+  noche(j, { lobos: { id: 2 } });
+  ok(av(j)); // anuncio → debate
+  ok(j.hacer("sacar", { id: 1 }));
+  igual(j.S.etapa, "cazador");
+  ok(av(j, { id: 3 })); ok(av(j));
+  igual(j.S.etapa, "debate", "vuelve al debate");
+});
+prueba("sacar al último lobo termina la partida", () => {
+  const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
+  ok(j.hacer("sacar", { id: 0 }));
+  igual([j.S.fase, j.S.ganador], ["fin", "aldea"]);
+});
 prueba("deshacer vuelve al paso anterior", () => {
   const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
   ok(av(j));
   igual(paso(j), "lobos");
   j.deshacer();
   igual(paso(j), "anochecer");
+});
+
+console.log("Marcador");
+prueba("resultado y marcador entre partidas", () => {
+  const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"]);
+  igual(E.resultado(j.S), null, "sin terminar no hay resultado");
+  noche(j, { lobos: { id: 1 } });
+  ok(av(j)); ok(av(j)); ok(av(j, { id: 0 })); ok(av(j));
+  const r = E.resultado(j.S);
+  igual([r.ganador, r.jugadores[0].gano, r.jugadores[1].gano], ["aldea", false, true]);
+  const m = E.marcador([r, { id: "x", ganador: "lobos", jugadores: [{ nombre: "j0", gano: true }, { nombre: "J1", gano: false }] }]);
+  igual([m.partidas, m.equipos.aldea, m.equipos.lobos], [2, 1, 1]);
+  const j0 = m.jugadores.find(x => x.nombre === "J0");
+  igual([j0.jugadas, j0.ganadas], [2, 1], "junta nombres sin importar mayúsculas");
 });
 
 console.log(`\n${total - fallas}/${total} bien`);

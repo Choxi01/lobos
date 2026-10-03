@@ -9,13 +9,14 @@ qué leer en voz alta, quién se despierta, a quién eligió cada uno y quién m
 Funciona sin internet una vez abierta.
 
 ## Roles incluidos
-🐺 Lobo · 🧑‍🌾 Aldeano · 🔮 Vidente · 🛡️ Protector · 🧪 Bruja · 🏹 Cazador · 💘 Cupido · 👴 Anciano · 🤪 Tonto del pueblo
+🐺 Lobo · 🧑‍🌾 Aldeano · 🔮 Vidente · 🛡️ Protector · 🏹 Cazador · 🧛 Maldito
+
+Además: contador de votos con segunda vuelta, marcador entre partidas y pantalla oscura de noche.
 
 ## Usarla en el celu
-1. Subí esta carpeta a un repo de GitHub (por ejemplo `lobos`) y activá **GitHub Pages**
-   (Settings → Pages → Branch `main`, carpeta `/root`).
-2. Abrí el link en **Safari** (iPhone) o **Chrome** (Android).
-3. Compartir → **Agregar a pantalla de inicio**.
+1. Abrí el link en **Safari** (iPhone) o **Chrome** (Android).
+2. Compartir → **Agregar a pantalla de inicio**.
+3. Abrila una vez con internet para que quede guardada.
 
 ## Personalizarla
 | Quiero cambiar… | Archivo |

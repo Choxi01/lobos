@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   const R = window.LoboRoles, E = window.LoboEstado, T = window.LoboTextos;
-  const CLAVE = "lobos-v1", CLAVE_CFG = "lobos-config";
+  const CLAVE = "lobos-v1", CLAVE_CFG = "lobos-config", CLAVE_MAR = "lobos-marcador", CLAVE_RELOJ = "lobos-reloj";
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -17,12 +17,15 @@
   let sel = selVacia();
   let velo = null;           // reparto: {id, ver}
   let discreto = false;
-  const reloj = { clave: null, total: 0, resta: 0, corre: false, fin: 0 };
+  const reloj = Object.assign({ clave: null, total: 0, resta: 0, corre: false, fin: 0 }, leer(CLAVE_RELOJ) || {});
+  const mar = Object.assign({ partidas: {} }, leer(CLAVE_MAR) || {}); // marcador: {partidas: {id: resultado}}
 
-  function selVacia() { return { ids: [], curar: false, veneno: null, nadie: false }; }
+  // votos: {id: cantidad} del contador. segunda: ids que van a la segunda vuelta. mano: el narrador eligió tocando.
+  function selVacia() { return { ids: [], nadie: false, mano: false, votos: {}, segunda: null }; }
   const S = () => juego.S;
   const guardar = () => escribir(CLAVE, juego.exportar());
   const guardarCfg = () => escribir(CLAVE_CFG, cfg);
+  const guardarReloj = () => escribir(CLAVE_RELOJ, reloj);
   const rol = r => R.ROLES[r];
   const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
@@ -102,6 +105,7 @@
       sino("revelar", "Revelar el rol al morir", "El narrador dice qué era cada muerto.") +
       sino("fingirMuertos", "Llamar a los roles muertos", "Se los llama igual de noche para que nadie sepa quién murió.") +
       sino("repetirProtegido", "El protector puede repetir", "Proteger a la misma persona dos noches seguidas.") +
+      sino("oscuro", "Pantalla oscura de noche", "Fondo negro y letra tenue para que el brillo no delate nada.") +
       `<div class="opcion"><div><b>Tiempo de debate</b><small>Con cuenta regresiva durante el día.</small></div>
         <div class="seg">${[120, 180, 300, 480].map(s => `<button data-a="opt" data-k="debate" data-v="${s}" aria-pressed="${o.debate === s}">${s / 60}′</button>`).join("")}</div></div>`;
 
@@ -162,13 +166,13 @@
       <p class="aviso">Pasale el celu a cada jugador: toca su nombre, mira su rol a escondidas y lo oculta antes de devolverlo.</p>
       <div class="grilla">${s.jugadores.map(j => `<button class="jug ${j.visto ? "listo" : ""}" data-a="ver" data-id="${j.id}">${esc(j.nombre)}${j.visto ? " ✓" : ""}</button>`).join("")}</div>
       <p class="progreso">${vistos} de ${s.jugadores.length} ya vieron su rol</p>
-      <details class="desplegable">
+      ${discreto ? `<p class="fingir">🙈 Los roles de todos están ocultos mientras pasa el celu. Para verlos o cambiarlos, tocá 👁 (solo el narrador).</p>` : `<details class="desplegable">
         <summary>Roles de todos (solo narrador)</summary>
         <p class="nota">Si repartieron cartas físicas, cambiá acá el rol de cada uno para que coincida.</p>
         <div class="lista-sel">${s.jugadores.map(j => `<label class="fila-sel"><span>${esc(j.nombre)}</span>
           <select data-a="cambiarRol" data-id="${j.id}">${R.ORDEN.map(r => `<option value="${r}" ${r === j.rol ? "selected" : ""}>${rol(r).emoji} ${rol(r).nombre}</option>`).join("")}</select></label>`).join("")}</div>
         <button class="btn" data-a="resortear">🎲 Volver a sortear</button>
-      </details>` +
+      </details>`}` +
       pie(`${btnDeshacer()}<button class="btn-principal" data-a="empezar">🌙 Empezar la primera noche</button>`);
   }
 
@@ -190,7 +194,7 @@
       v.innerHTML = `<div class="velo-caja carta eq-${d.equipo}">
         <div class="carta-emoji">${d.emoji}</div>
         <p class="tenue">${esc(j.nombre)}, sos</p>
-        <h1 class="grande">${d.nombre}</h1>
+        <h1 class="grande">${E.nombreRol(j)}</h1>
         <p class="equipo">${d.equipo === "lobos" ? "Equipo de los lobos" : "Equipo de la aldea"}</p>
         <p>${esc(d.desc)}</p>
         <button class="btn-principal grande" data-a="ocultar">Listo, ocultar</button></div>`;
@@ -202,26 +206,23 @@
     const p = E.pasoActual(s);
     const tx = T.NOCHE[p](s.ronda);
     const ultimo = s.i === s.pasos.length - 1;
-    const actRol = { cupido: "cupido", vidente: "vidente", protector: "protector", lobos: "lobo", bruja: "bruja" }[p];
+    const actRol = { vidente: "vidente", protector: "protector", lobos: "lobo" }[p];
     const act = actRol ? E.actores(s, actRol) : [];
     const fingir = actRol && !act.length;
     let cuerpo = "";
 
     if (fingir) {
       cuerpo = `<div class="fingir">${T.FINGIR(rol(actRol).nombre)}</div>`;
-    } else if (p === "enamorados") {
-      const e = s.mem.enamorados || [];
-      cuerpo = quien(s, e.map(id => s.jugadores[id]), "Se despiertan los enamorados") + nota(tx.nota);
     } else {
       cuerpo = quien(s, act) + nota(tx.nota);
-      if (p === "cupido") cuerpo += selector(s, "cupido");
       if (p === "vidente") cuerpo += selector(s, "vidente") + resultadoVidente(s);
       if (p === "protector") cuerpo += selector(s, "protector");
       if (p === "lobos") {
         const muertos = E.actores(s, "lobo").length < s.jugadores.filter(j => j.rol === "lobo").length;
-        cuerpo += (muertos ? `<p class="nota secreto">Los lobos muertos ya no se despiertan.</p>` : "") + selector(s, "lobos");
+        const c = s.mem.convertido;
+        const nuevo = c && c.ronda === s.ronda - 1 && s.jugadores[c.id].vivo ? `<div class="fingir secreto">${T.NOCHE.convertido(esc(s.jugadores[c.id].nombre))}</div>` : "";
+        cuerpo += nuevo + (muertos ? `<p class="nota secreto">Los lobos muertos ya no se despiertan.</p>` : "") + selector(s, "lobos");
       }
-      if (p === "bruja") cuerpo += panelBruja(s);
     }
 
     return `<div class="paso-num">Noche ${s.ronda} · paso ${s.i + 1} de ${s.pasos.length}</div>
@@ -239,59 +240,34 @@
     const lobo = j.rol === "lobo";
     return `<div class="resultado ${lobo ? "malo" : "bueno"} secreto">
       <span class="carta-emoji chica">${d.emoji}</span>
-      <div><b>${esc(j.nombre)}</b> es <b>${d.nombre}</b><small>${lobo ? "👎 Pulgar abajo: es lobo" : "👍 Pulgar arriba: no es lobo"}</small></div></div>`;
-  }
-
-  function panelBruja(s) {
-    const v = s.noche.victima;
-    const vj = v != null ? s.jugadores[v] : null;
-    let extra = "";
-    if (vj && s.noche.protegido === v) extra = " — el protector la cuidó, se salva igual";
-    else if (vj && vj.rol === "anciano" && !s.mem.ancianoHerido) extra = " — es el anciano, resiste este ataque";
-    const b = E.actores(s, "bruja")[0];
-    return `<div class="victima secreto">Víctima de los lobos: <b>${vj ? esc(vj.nombre) : "nadie"}</b> ${vj ? rol(vj.rol).emoji : ""}<small>${extra}</small></div>
-      <div class="pocion">
-        <div class="pocion-tit">🧪 Poción de vida ${s.mem.vida ? "" : "<em>(ya la usó)</em>"}</div>
-        <div class="seg ancho"><button data-a="curar" data-v="1" aria-pressed="${sel.curar}" ${s.mem.vida && vj ? "" : "disabled"}>Salvar a ${vj ? esc(vj.nombre) : "—"}</button><button data-a="curar" data-v="0" aria-pressed="${!sel.curar}">No usar</button></div>
-      </div>
-      <div class="pocion">
-        <div class="pocion-tit">☠️ Poción de muerte ${s.mem.muerte ? "" : "<em>(ya la usó)</em>"}</div>
-        ${s.mem.muerte ? selector(s, "veneno", b) : ""}
-      </div>`;
+      <div><b>${esc(j.nombre)}</b> es <b>${E.nombreRol(j)}</b><small>${lobo ? "👎 Pulgar abajo: es lobo" : "👍 Pulgar arriba: no es lobo"}</small></div></div>`;
   }
 
   // Lista de jugadores para tocar. modo define quién se puede elegir.
-  function selector(s, modo, extra) {
+  function selector(s, modo) {
     const vivos = E.vivos(s);
     const anterior = s.mem.ultimoProtegido;
     const puede = j => {
       if (modo === "vidente" && j.rol === "vidente") return "es la vidente";
       if (modo === "lobos" && j.rol === "lobo") return "es lobo";
       if (modo === "protector" && !s.cfg.opciones.repetirProtegido && j.id === anterior) return "anoche";
-      if (modo === "veneno" && extra && j.id === extra.id) return "es la bruja";
       return "";
     };
-    const marcado = modo === "veneno" ? (j => sel.veneno === j.id) : (j => sel.ids.includes(j.id));
-    const accion = modo === "veneno" ? "veneno" : "elegir";
     const botones = vivos.map(j => {
       const motivo = puede(j);
-      return `<button class="jug" data-a="${accion}" data-id="${j.id}" aria-pressed="${marcado(j)}" ${motivo ? "disabled" : ""}>
+      return `<button class="jug" data-a="elegir" data-id="${j.id}" aria-pressed="${sel.ids.includes(j.id)}" ${motivo ? "disabled" : ""}>
         <span>${esc(j.nombre)}</span><small class="secreto">${rol(j.rol).emoji}${motivo ? " " + motivo : ""}</small></button>`;
     }).join("");
-    const nadie = modo === "veneno"
-      ? `<button class="jug nadie" data-a="veneno" data-id="" aria-pressed="${sel.veneno == null}">Nadie</button>`
-      : (modo === "votacion" || modo === "cazador")
-        ? `<button class="jug nadie" data-a="nadie" aria-pressed="${sel.nadie}">${modo === "votacion" ? "Nadie" : "No dispara"}</button>` : "";
-    const ayuda = modo === "cupido" ? `<p class="etiqueta">Elegí dos (${sel.ids.length}/2)</p>` : "";
-    return `${ayuda}<div class="grilla elegir">${botones}${nadie}</div>`;
+    const nadie = modo === "cazador" ? `<button class="jug nadie" data-a="nadie" aria-pressed="${sel.nadie}">No dispara</button>` : "";
+    return `<div class="grilla elegir">${botones}${nadie}</div>`;
   }
 
   function listo(s) {
     if (s.fase === "noche") {
       const p = E.pasoActual(s);
-      const actRol = { cupido: "cupido", vidente: "vidente", protector: "protector", lobos: "lobo" }[p];
+      const actRol = { vidente: "vidente", protector: "protector", lobos: "lobo" }[p];
       if (!actRol || !E.actores(s, actRol).length) return true;
-      return p === "cupido" ? sel.ids.length === 2 : sel.ids.length === 1;
+      return sel.ids.length === 1;
     }
     if (s.fase === "dia" && (s.etapa === "cazador" || s.etapa === "votacion")) return sel.ids.length === 1 || sel.nadie;
     return true;
@@ -301,7 +277,7 @@
   function lineasMuertes(s, lista) {
     return lista.map(({ id, causa }) => {
       const j = s.jugadores[id];
-      return T.DIA.muerte[causa](esc(j.nombre)) + (s.cfg.opciones.revelar ? " " + T.DIA.era(`${rol(j.rol).nombre} ${rol(j.rol).emoji}`) : "");
+      return T.DIA.muerte[causa](esc(j.nombre)) + (s.cfg.opciones.revelar ? " " + T.DIA.era(`${E.nombreRol(j)} ${rol(j.rol).emoji}`) : "");
     });
   }
 
@@ -316,7 +292,7 @@
     let h = `<div class="paso-num">Día ${s.ronda}</div>`;
     let boton = "Siguiente →";
     const secretoMuertos = lista => lista.length && !s.cfg.opciones.revelar
-      ? `<p class="nota secreto">Solo para vos: ${lista.map(({ id }) => `${esc(s.jugadores[id].nombre)} era ${rol(s.jugadores[id].rol).nombre}`).join(", ")}.</p>` : "";
+      ? `<p class="nota secreto">Solo para vos: ${lista.map(({ id }) => `${esc(s.jugadores[id].nombre)} era ${E.nombreRol(s.jugadores[id])}`).join(", ")}.</p>` : "";
 
     if (e === "anuncio") {
       const lineas = lineasMuertes(s, s.anuncio);
@@ -342,16 +318,16 @@
             <button class="btn" data-a="reloj" data-v="play" id="relojPlay">▶ Empezar</button>
             <button class="btn" data-a="reloj" data-v="mas">+30″</button>
             <button class="btn" data-a="reloj" data-v="reset">↺</button>
-          </div></div>` + noVotan(s);
+          </div></div>`;
       boton = "🗳️ A votar";
     } else if (e === "votacion") {
-      h += `<h1>Votación</h1>` + leerTxt(T.DIA.votacion) + nota(T.DIA.votacionNota) + noVotan(s) + selector(s, "votacion");
+      const segunda = sel.segunda ? T.DIA.segundaVuelta(sel.segunda.map(id => esc(s.jugadores[id].nombre)).join(" y ")) : "";
+      h += `<h1>${sel.segunda ? "Segunda vuelta" : "Votación"}</h1>` + leerTxt(segunda || T.DIA.votacion) + nota(T.DIA.votacionNota) + contadorVotos(s);
       boton = "⚖ Confirmar";
     } else if (e === "veredicto") {
       const l = s.linchado || {};
       let lineas;
       if (l.id == null) lineas = [T.DIA.nadieLinchado];
-      else if (l.tonto) lineas = [T.DIA.tonto(esc(s.jugadores[l.id].nombre))];
       else lineas = lineasMuertes(s, s.anuncio);
       h += `<h1>Veredicto</h1>` + lineas.map(leerTxt).join("") + secretoMuertos(s.anuncio);
       boton = etiquetaSeguir(s, "🌙 Que caiga la noche");
@@ -359,9 +335,45 @@
     return h + pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : "disabled"}>${boton}</button>`);
   }
 
-  function noVotan(s) {
-    const t = s.jugadores.find(j => j.rol === "tonto" && j.vivo && s.mem.tontoRevelado);
-    return t ? `<p class="nota">🤪 ${esc(t.nombre)} no vota (es el Tonto del pueblo).</p>` : "";
+  /* ---------- Contador de votos ---------- */
+  const candidatos = s => E.vivos(s).filter(j => !sel.segunda || sel.segunda.includes(j.id));
+  function lideres(s) {
+    const c = candidatos(s);
+    const max = Math.max(0, ...c.map(j => sel.votos[j.id] || 0));
+    return { max, ids: max ? c.filter(j => (sel.votos[j.id] || 0) === max).map(j => j.id) : [] };
+  }
+  // Con un solo más votado, queda elegido. Con empate, se mantiene la elección a mano si es uno de los empatados.
+  function recalcularVotos(s) {
+    const l = lideres(s);
+    if (l.ids.length === 1) { sel.ids = l.ids.slice(); sel.mano = false; }
+    else if (!(sel.mano && l.ids.includes(sel.ids[0]))) { sel.ids = []; sel.mano = false; }
+  }
+  function contadorVotos(s) {
+    const votantes = E.vivos(s).length;
+    const c = candidatos(s);
+    const total = c.reduce((t, j) => t + (sel.votos[j.id] || 0), 0);
+    const l = lideres(s);
+    const nom = id => esc(s.jugadores[id].nombre);
+    const filas = c.map(j => {
+      const n = sel.votos[j.id] || 0;
+      return `<div class="fila-voto ${n && l.ids.includes(j.id) ? "lider" : ""}">
+        <button class="voto-nombre" data-a="voto" data-id="${j.id}" data-v="1">${esc(j.nombre)}</button>
+        <button class="paso-btn" data-a="voto" data-id="${j.id}" data-v="-1" ${n ? "" : "disabled"} aria-label="Un voto menos a ${esc(j.nombre)}">−</button>
+        <span class="cant">${n}</span>
+        <button class="paso-btn" data-a="voto" data-id="${j.id}" data-v="1" aria-label="Un voto más a ${esc(j.nombre)}">+</button></div>`;
+    }).join("");
+    let estado;
+    if (sel.nadie) estado = `<p class="veredicto-votos">Hoy nadie va a la horca.</p>`;
+    else if (!l.max) estado = "";
+    else if (l.ids.length === 1) estado = `<p class="veredicto-votos">Va a la horca: <b>${nom(l.ids[0])}</b> (${plural(l.max, "voto", "votos")})</p>`;
+    else estado = `<div class="empate"><p class="veredicto-votos">Empate entre ${l.ids.map(nom).join(" y ")} (${plural(l.max, "voto", "votos")} cada uno)</p>
+        <button class="btn" data-a="segunda">🔁 Segunda vuelta entre ellos</button>
+        <p class="etiqueta">O decide la mesa</p>
+        <div class="grilla">${l.ids.map(id => `<button class="jug" data-a="elegir" data-id="${id}" aria-pressed="${sel.ids.includes(id)}">${nom(id)}</button>`).join("")}</div></div>`;
+    return `<div class="lista-votos">${filas}</div>
+      <p class="progreso ${total > votantes ? "error" : ""}">${plural(total, "voto", "votos")} de ${plural(votantes, "votante", "votantes")}${total > votantes ? ": hay más votos que vivos" : ""}</p>
+      ${estado}
+      <div class="grilla elegir"><button class="jug nadie" data-a="nadie" aria-pressed="${sel.nadie}">Nadie va a la horca</button></div>`;
   }
 
   function resumenNoche(s) {
@@ -375,9 +387,10 @@
 
   /* ---------- Reloj del debate ---------- */
   function prepararReloj(s) {
-    const clave = `${s.ronda}`;
+    const clave = `${s.id}-${s.ronda}`;
     if (reloj.clave === clave) return;
     reloj.clave = clave; reloj.total = s.cfg.opciones.debate; reloj.resta = reloj.total; reloj.corre = false;
+    guardarReloj();
   }
   function pintarReloj() {
     const n = $("relojNum");
@@ -391,24 +404,35 @@
   function controlReloj(v) {
     if (v === "play") {
       if (reloj.corre) { reloj.corre = false; }
-      else { if (reloj.resta <= 0) reloj.resta = reloj.total; reloj.corre = true; reloj.fin = Date.now() + reloj.resta * 1000; }
+      else { if (reloj.resta <= 0) reloj.resta = reloj.total; reloj.corre = true; reloj.fin = Date.now() + reloj.resta * 1000; prepararAudio(); }
     } else if (v === "mas") {
       reloj.resta += 30; if (reloj.corre) reloj.fin += 30000;
     } else if (v === "reset") {
       reloj.corre = false; reloj.resta = reloj.total;
     }
+    guardarReloj();
     pintarReloj();
   }
   setInterval(() => {
     if (!reloj.corre) return;
     reloj.resta = Math.max(0, (reloj.fin - Date.now()) / 1000);
-    if (reloj.resta === 0) { reloj.corre = false; alarma(); }
+    if (reloj.resta === 0) { reloj.corre = false; guardarReloj(); alarma(); }
     pintarReloj();
   }, 250);
+  // El iPhone solo deja sonar audio preparado al tocar un botón: se prepara al tocar «Empezar».
+  let audio = null;
+  function prepararAudio() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume();
+      const src = audio.createBufferSource();
+      src.buffer = audio.createBuffer(1, 1, 22050); src.connect(audio.destination); src.start(0);
+    } catch (e) {}
+  }
   function alarma() {
     if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audio || new (window.AudioContext || window.webkitAudioContext)();
       [0, 0.35, 0.7].forEach(t => {
         const o = ctx.createOscillator(), g = ctx.createGain();
         o.frequency.value = 660; o.connect(g); g.connect(ctx.destination);
@@ -423,18 +447,42 @@
   /* ---------- Final ---------- */
   function escenaFin(s) {
     const f = T.FIN[s.ganador] || T.FIN.nadie;
-    const e = s.mem.enamorados || [];
-    const ganoEquipo = j => s.ganador === "enamorados" ? e.includes(j.id) : R.equipo(j.rol) === (s.ganador === "lobos" ? "lobos" : "aldea");
+    const ganoEquipo = j => R.equipo(j.rol) === s.ganador;
     return `<div class="final g-${s.ganador}"><h1 class="grande">${f.titulo}</h1>${leerTxt(f.leer)}</div>
       <h2>Quién era quién</h2>
       <div class="lista-final">${s.jugadores.map(j => `<div class="fila-final ${j.vivo ? "" : "muerto"} ${ganoEquipo(j) ? "gano" : ""}">
-        <span class="emoji">${rol(j.rol).emoji}</span><b>${esc(j.nombre)}</b><span>${rol(j.rol).nombre}${e.includes(j.id) ? " 💞" : ""}</span>
+        <span class="emoji">${rol(j.rol).emoji}</span><b>${esc(j.nombre)}</b><span>${E.nombreRol(j)}</span>
         <small>${j.vivo ? "vivo" : textoMuerte(j)}</small></div>`).join("")}</div>
+      <h2>Marcador</h2>${tablaMarcador(s.jugadores.map(j => j.nombre))}
       <div class="acciones">
         <button class="btn-principal" data-a="revancha">🎲 Revancha (mismos jugadores, roles nuevos)</button>
         <button class="btn" data-a="nueva">Nueva partida</button>
         <button class="btn" data-a="tab" data-tab="registro">Ver todo lo que pasó</button>
+        <button class="link" data-a="deshacer">↶ Deshacer el último paso (si terminó por error)</button>
       </div>`;
+  }
+
+  /* ---------- Marcador entre partidas ---------- */
+  // Guarda la partida actual si terminó, o la saca si se deshizo el final.
+  function sincronizarMarcador() {
+    const s = S();
+    if (!s || !s.id) return;
+    const r = E.resultado(s), antes = mar.partidas[s.id];
+    if (r && (!antes || antes.ganador !== r.ganador)) mar.partidas[s.id] = r;
+    else if (!r && antes) delete mar.partidas[s.id];
+    else return;
+    escribir(CLAVE_MAR, mar);
+  }
+  function tablaMarcador(soloEstos) {
+    const lista = Object.values(mar.partidas);
+    if (!lista.length) return `<p class="vacio">Acá se van a ir sumando las partidas que terminen.</p>`;
+    const m = E.marcador(lista);
+    const filtro = soloEstos && soloEstos.map(n => n.toLowerCase());
+    const filas = m.jugadores.filter(j => !filtro || filtro.includes(j.nombre.toLowerCase()));
+    return `<div class="resumen"><span class="chip">${plural(m.partidas, "partida", "partidas")}</span>
+        <span class="chip">🏘️ aldea ${m.equipos.aldea}</span><span class="chip">🐺 lobos ${m.equipos.lobos}</span></div>
+      <div class="tabla-wrap"><table><thead><tr><th>Jugador</th><th>Ganadas</th><th>Jugadas</th></tr></thead>
+      <tbody>${filas.map(j => `<tr><td>${esc(j.nombre)}</td><td class="q">${j.ganadas}</td><td>${j.jugadas}</td></tr>`).join("")}</tbody></table></div>`;
   }
 
   function textoMuerte(j) {
@@ -448,33 +496,30 @@
      ====================================================================== */
   function renderJugadores() {
     const s = S();
-    if (!s) { $("tablaJug").innerHTML = `<p class="vacio">Todavía no hay partida. Armala desde la pestaña Narrador.</p>`; return; }
+    const pieMarcador = `<h2>Marcador</h2>${tablaMarcador()}` +
+      (Object.keys(mar.partidas).length ? `<button class="link" data-a="borrarMarcador">Borrar el marcador</button>` : "");
+    if (!s) { $("tablaJug").innerHTML = `<p class="vacio">Todavía no hay partida. Armala desde la pestaña Narrador.</p>` + pieMarcador; return; }
     const vivos = E.vivos(s);
-    const e = s.mem.enamorados || [];
-    const hayBruja = s.jugadores.some(j => j.rol === "bruja");
     const enJuego = s.fase === "noche" || s.fase === "dia";
     let h = `<div class="resumen">
       <span class="chip">${plural(vivos.length, "vivo", "vivos")}</span>
       <span class="chip secreto">🐺 ${vivos.filter(j => j.rol === "lobo").length} lobos</span>
-      <span class="chip secreto">🏘️ ${vivos.filter(j => j.rol !== "lobo").length} del pueblo</span>
-      ${hayBruja ? `<span class="chip secreto">🧪 vida ${s.mem.vida ? "✓" : "✗"} · muerte ${s.mem.muerte ? "✓" : "✗"}</span>` : ""}</div>`;
+      <span class="chip secreto">🏘️ ${vivos.filter(j => j.rol !== "lobo").length} del pueblo</span></div>`;
     h += `<div class="lista-jug">` + s.jugadores.map(j => {
       const d = rol(j.rol);
       const marcas = [];
-      if (e.includes(j.id)) marcas.push("💞 enamorado");
       if (s.mem.ultimoProtegido === j.id && j.vivo) marcas.push("🛡️ protegido anoche");
-      if (j.rol === "anciano" && s.mem.ancianoHerido) marcas.push("🩹 ya lo atacaron");
-      if (j.rol === "tonto" && s.mem.tontoRevelado) marcas.push("🚫 no vota");
+      if (j.origen === "maldito") marcas.push("🧛 lo mordieron: ahora es lobo");
       return `<div class="fila-jug ${j.vivo ? "" : "muerto"} eq-${d.equipo}">
         <span class="emoji secreto">${d.emoji}</span>
-        <div class="datos"><b>${esc(j.nombre)}</b> <span class="rol secreto">${d.nombre}</span>
+        <div class="datos"><b>${esc(j.nombre)}</b> <span class="rol secreto">${E.nombreRol(j)}</span>
           ${marcas.length ? `<small class="marcas secreto">${marcas.join(" · ")}</small>` : ""}
           ${j.vivo ? "" : `<small>☠ ${textoMuerte(j)}</small>`}</div>
         ${enJuego ? `<button class="mini" data-a="${j.vivo ? "sacar" : "revivir"}" data-id="${j.id}">${j.vivo ? "Sacar" : "Revivir"}</button>` : ""}
       </div>`;
     }).join("") + `</div>`;
-    if (enJuego) h += `<p class="nota">«Sacar» y «Revivir» son para corregir errores o si alguien se tiene que ir. Se pueden deshacer.</p>`;
-    $("tablaJug").innerHTML = h;
+    if (enJuego) h += `<p class="nota">«Sacar» y «Revivir» son para corregir errores o si alguien se tiene que ir. Si sacás al cazador, dispara. Se pueden deshacer.</p>`;
+    $("tablaJug").innerHTML = h + pieMarcador;
   }
 
   /* ======================================================================
@@ -494,9 +539,7 @@
       </ul>
       <h2>Orden de la noche</h2>
       <ol class="lista-reglas">
-        <li>💘 Cupido <span class="tenue">(solo la primera noche)</span></li>
-        <li>💞 Enamorados se reconocen <span class="tenue">(solo la primera noche)</span></li>
-        <li>🔮 Vidente</li><li>🛡️ Protector</li><li>🐺 Lobos</li><li>🧪 Bruja</li>
+        <li>🔮 Vidente</li><li>🛡️ Protector</li><li>🐺 Lobos <span class="tenue">(con el Maldito, si ya lo mordieron)</span></li>
       </ol>
       <h2>Roles</h2>
       <div class="cartas-rol">${R.ORDEN.map(r => {
@@ -551,11 +594,13 @@
      ====================================================================== */
   function render() {
     const s = S();
-    const tema = s && (s.fase === "dia" || (s.fase === "fin" && s.ganador !== "lobos")) ? "dia" : "noche";
+    sincronizarMarcador();
+    let tema = s && (s.fase === "dia" || (s.fase === "fin" && s.ganador !== "lobos")) ? "dia" : "noche";
+    if (s && s.fase === "noche" && !enConfig && s.cfg.opciones.oscuro) tema = "oscuro";
     if (document.body.dataset.fase !== tema) {
       document.body.dataset.fase = tema;
       const m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.content = tema === "dia" ? "#efdfbf" : "#0b0f24";
+      if (m) m.content = { dia: "#efdfbf", noche: "#0b0f24", oscuro: "#000000" }[tema];
     }
     document.body.classList.toggle("discreto", discreto);
     if (enConfig) renderConfig(); else renderNarrador();
@@ -603,7 +648,8 @@
       case "repartir": {
         const v = R.validar(cfg.cuentas, cfg.jugadores.length);
         if (!v.ok) { aviso(v.motivo); $("errorConfig").hidden = false; $("errorConfig").textContent = v.motivo; break; }
-        juego.empezar(cfg); sel = selVacia(); reloj.clave = null;
+        if (s && (s.fase === "noche" || s.fase === "dia") && !confirm("Hay una partida en juego. ¿Dejarla y repartir una nueva? (Se puede deshacer.)")) break;
+        juego.empezar(cfg); sel = selVacia(); discreto = true;
         guardar(); enConfig = false; irA("narrador"); render(); break;
       }
       case "volver": enConfig = false; irA("narrador"); render(); break;
@@ -617,25 +663,26 @@
       case "resortear": hacer("resortear"); break;
       case "empezar": {
         const faltan = s.jugadores.filter(j => !j.visto).length;
+        discreto = false;
         hacer("empezar");
         if (faltan) aviso(`Ojo: ${plural(faltan, "jugador no vio", "jugadores no vieron")} su rol en la app.`);
         break;
       }
 
       // Elegir jugadores
-      case "elegir": {
-        const p = s.fase === "noche" ? E.pasoActual(s) : s.etapa;
-        sel.nadie = false;
-        if (sel.ids.includes(id)) sel.ids = sel.ids.filter(x => x !== id);
-        else if (p === "cupido") { sel.ids.push(id); if (sel.ids.length > 2) sel.ids.shift(); }
-        else sel.ids = [id];
+      case "elegir":
+        sel.nadie = false; sel.mano = true;
+        sel.ids = sel.ids.includes(id) ? [] : [id];
         renderNarrador(); break;
-      }
-      case "nadie": sel.nadie = !sel.nadie; sel.ids = []; renderNarrador(); break;
-      case "veneno": sel.veneno = id; renderNarrador(); break;
-      case "curar": sel.curar = b.dataset.v === "1"; renderNarrador(); break;
+      case "nadie": sel.nadie = !sel.nadie; sel.ids = []; if (!sel.nadie && s.etapa === "votacion") recalcularVotos(s); renderNarrador(); break;
+      case "voto":
+        sel.votos[id] = Math.max(0, (sel.votos[id] || 0) + +b.dataset.v);
+        sel.nadie = false; recalcularVotos(s); renderNarrador(); break;
+      case "segunda":
+        sel.segunda = lideres(s).ids; sel.votos = {}; sel.ids = []; sel.nadie = false; sel.mano = false;
+        renderNarrador(); window.scrollTo(0, 0); break;
       case "siguiente":
-        hacer("avanzar", { ids: sel.ids, id: sel.ids.length ? sel.ids[0] : null, curar: sel.curar, veneno: sel.veneno, nadie: sel.nadie });
+        hacer("avanzar", { ids: sel.ids, id: sel.ids.length ? sel.ids[0] : null, nadie: sel.nadie, votos: sel.votos, segunda: !!sel.segunda });
         break;
       case "deshacer":
         if (juego.puedeDeshacer) { juego.deshacer(); sel = selVacia(); velo = null; guardar(); render(); aviso("Deshecho"); }
@@ -646,7 +693,10 @@
       case "discreto": discreto = !discreto; render(); break;
       case "sacar": hacer("sacar", { id }); break;
       case "revivir": hacer("revivir", { id }); break;
-      case "revancha": juego.revancha(); sel = selVacia(); reloj.clave = null; guardar(); render(); window.scrollTo(0, 0); break;
+      case "revancha": juego.revancha(); sel = selVacia(); discreto = true; guardar(); render(); window.scrollTo(0, 0); break;
+      case "borrarMarcador":
+        if (confirm("¿Borrar el marcador de todas las partidas?")) { mar.partidas = {}; escribir(CLAVE_MAR, mar); render(); }
+        break;
       case "copiar": {
         const t = textoRegistro();
         if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => aviso("Registro copiado"), () => aviso("No se pudo copiar"));

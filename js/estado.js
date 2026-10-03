@@ -5,7 +5,7 @@
   "use strict";
   const R = raiz.LoboRoles || (typeof require !== "undefined" ? require("./roles.js") : null);
 
-  const VERSION = 1;
+  const VERSION = 2;
   const MAX_DESHACER = 80;
   const clonar = o => JSON.parse(JSON.stringify(o));
   const NO = motivo => ({ ok: false, motivo });
@@ -13,15 +13,13 @@
 
   const CAUSAS = {
     lobos: "atacado por los lobos",
-    bruja: "envenenado por la bruja",
     linchado: "linchado por el pueblo",
     cazador: "baleado por el cazador",
-    pena: "murió de pena",
     narrador: "sacado por el narrador",
   };
 
   function opcionesPorDefecto() {
-    return { revelar: true, repetirProtegido: false, fingirMuertos: true, debate: 180 };
+    return { revelar: true, repetirProtegido: false, fingirMuertos: true, debate: 180, oscuro: true };
   }
 
   function configPorDefecto() {
@@ -29,7 +27,7 @@
   }
 
   function nocheVacia() {
-    return { cupido: null, vidente: null, protegido: null, victima: null, curar: false, veneno: null };
+    return { vidente: null, protegido: null, victima: null };
   }
 
   function nuevaPartida(cfg, azar) {
@@ -37,16 +35,18 @@
     const roles = R.sortear(nombres.length, cfg.cuentas, azar);
     return {
       v: VERSION,
+      id: String(Date.now()),   // identifica la partida en el marcador
       cfg: clonar({ jugadores: nombres, cuentas: cfg.cuentas, opciones: Object.assign(opcionesPorDefecto(), cfg.opciones || {}) }),
       fase: "reparto",          // reparto → noche ⇄ dia → fin
-      jugadores: nombres.map((nombre, id) => ({ id, nombre, rol: roles[id], vivo: true, visto: false, muerte: null })),
+      // origen: rol con el que empezó, si cambió (el maldito convertido en lobo).
+      jugadores: nombres.map((nombre, id) => ({ id, nombre, rol: roles[id], origen: null, vivo: true, visto: false, muerte: null })),
       ronda: 0,
       pasos: [], i: 0,          // pasos de la noche actual
       etapa: null, retomar: null, // etapa del día: anuncio, cazador, disparo, debate, votacion, veredicto
       noche: nocheVacia(),
-      mem: { ultimoProtegido: null, vida: true, muerte: true, ancianoHerido: false, enamorados: null, tontoRevelado: false },
+      mem: { ultimoProtegido: null, convertido: null }, // convertido: {id, ronda} del maldito mordido
       anuncio: [],              // muertes recién ocurridas: [{id, causa}]
-      linchado: null,           // {id|null, tonto}
+      linchado: null,           // {id|null}
       cazadores: [],            // cazadores muertos que todavía no dispararon
       registro: [],
       ganador: null,
@@ -58,9 +58,15 @@
   const conRol = (S, rol) => S.jugadores.filter(j => j.rol === rol);
   const actores = (S, rol) => conRol(S, rol).filter(j => j.vivo);
   const nombre = (S, id) => S.jugadores[id].nombre;
-  const rolDe = (S, id) => R.ROLES[S.jugadores[id].rol].nombre;
+  const rolDe = (S, id) => nombreRol(S.jugadores[id]);
   const nombres = lista => lista.map(j => j.nombre).join(" y ");
   const vivo = (S, id) => id != null && S.jugadores[id] && S.jugadores[id].vivo;
+
+  // "Lobo (era Maldito)" para el que cambió de rol.
+  function nombreRol(j) {
+    const n = R.ROLES[j.rol].nombre;
+    return j.origen ? `${n} (era ${R.ROLES[j.origen].nombre})` : n;
+  }
 
   function log(S, texto) {
     S.registro.push({ r: S.ronda, f: S.fase, t: texto });
@@ -74,13 +80,11 @@
     j.vivo = false;
     j.muerte = { ronda: S.ronda, fase: S.fase, causa };
     S.anuncio.push({ id, causa });
-    log(S, `☠ ${j.nombre} (${R.ROLES[j.rol].nombre}): ${CAUSAS[causa]}.`);
+    log(S, `☠ ${j.nombre} (${nombreRol(j)}): ${CAUSAS[causa]}.`);
     if (j.rol === "cazador") S.cazadores.push(id);
-    const e = S.mem.enamorados;
-    if (e && e.includes(id)) matar(S, e[0] === id ? e[1] : e[0], "pena");
   }
 
-  function hayGanador(S) { return R.ganador(S.jugadores, S.mem.enamorados); }
+  function hayGanador(S) { return R.ganador(S.jugadores); }
 
   /* ---------- Noche ---------- */
   function empezarNoche(S) {
@@ -99,18 +103,6 @@
   // Qué hace cada paso de la noche al confirmarlo.
   const PASOS = {
     anochecer() { return SI; },
-
-    cupido(S, d) {
-      if (!actores(S, "cupido").length) return SI;
-      const ids = (d.ids || []).filter(id => vivo(S, id));
-      if (ids.length !== 2 || ids[0] === ids[1]) return NO("Elegí a los dos enamorados.");
-      S.mem.enamorados = ids.slice();
-      S.noche.cupido = ids.slice();
-      log(S, `💘 Cupido (${nombres(actores(S, "cupido"))}) enamoró a ${nombre(S, ids[0])} y ${nombre(S, ids[1])}.`);
-      return SI;
-    },
-
-    enamorados() { return SI; },
 
     vidente(S, d) {
       const v = actores(S, "vidente");
@@ -142,22 +134,6 @@
       return SI;
     },
 
-    bruja(S, d) {
-      const b = actores(S, "bruja");
-      if (!b.length) return SI;
-      const curar = !!d.curar;
-      const veneno = d.veneno == null ? null : d.veneno;
-      if (curar && !S.mem.vida) return NO("Ya usó la poción de vida.");
-      if (curar && S.noche.victima == null) return NO("No hay a quién curar.");
-      if (veneno != null && !S.mem.muerte) return NO("Ya usó la poción de muerte.");
-      if (veneno != null && !vivo(S, veneno)) return NO("Ese jugador ya está muerto.");
-      S.noche.curar = curar;
-      S.noche.veneno = veneno;
-      if (curar) { S.mem.vida = false; log(S, `🧪 La bruja (${nombres(b)}) usó la poción de vida en ${nombre(S, S.noche.victima)}.`); }
-      if (veneno != null) { S.mem.muerte = false; log(S, `🧪 La bruja (${nombres(b)}) envenenó a ${nombre(S, veneno)}.`); }
-      if (!curar && veneno == null) log(S, `🧪 La bruja (${nombres(b)}) no usó pociones.`);
-      return SI;
-    },
   };
 
   function amanecer(S) {
@@ -166,14 +142,14 @@
     S.mem.ultimoProtegido = n.protegido;
     const v = n.victima;
     if (v != null && vivo(S, v)) {
-      if (n.protegido === v) log(S, `🛡️ ${nombre(S, v)} estaba protegido y se salvó.`);
-      else if (n.curar) log(S, `🧪 ${nombre(S, v)} se salvó gracias a la bruja.`);
-      else if (S.jugadores[v].rol === "anciano" && !S.mem.ancianoHerido) {
-        S.mem.ancianoHerido = true;
-        log(S, `👴 ${nombre(S, v)} es el anciano: resistió el ataque (la próxima no).`);
+      const j = S.jugadores[v];
+      if (n.protegido === v) log(S, `🛡️ ${j.nombre} estaba protegido y se salvó.`);
+      else if (j.rol === "maldito") {
+        j.origen = "maldito"; j.rol = "lobo";
+        S.mem.convertido = { id: v, ronda: S.ronda };
+        log(S, `🧛 ${j.nombre} era el Maldito: no murió, ahora es lobo.`);
       } else matar(S, v, "lobos");
     }
-    if (n.veneno != null) matar(S, n.veneno, "bruja");
     S.fase = "dia";
     S.etapa = "anuncio";
     if (!S.anuncio.length) log(S, "☀ Amaneció sin muertos.");
@@ -186,7 +162,7 @@
     const g = hayGanador(S);
     if (g) {
       S.fase = "fin"; S.etapa = null; S.ganador = g;
-      log(S, `🏁 Fin de la partida: ${({ lobos: "ganan los lobos", aldea: "gana la aldea", enamorados: "ganan los enamorados", nadie: "no queda nadie" })[g]}.`);
+      log(S, `🏁 Fin de la partida: ${({ lobos: "ganan los lobos", aldea: "gana la aldea", nadie: "no queda nadie" })[g]}.`);
       return;
     }
     if (destino === "noche") empezarNoche(S);
@@ -218,23 +194,20 @@
 
     debate(S) { S.etapa = "votacion"; return SI; },
 
+    // d.votos (opcional): {id: cantidad} del contador, para el registro.
     votacion(S, d) {
       S.anuncio = [];
+      const conteo = Object.keys(d.votos || {}).map(Number).filter(id => d.votos[id] > 0 && S.jugadores[id])
+        .sort((a, b) => d.votos[b] - d.votos[a]);
+      if (conteo.length) log(S, `🗳️ Votos${d.segunda ? " (segunda vuelta)" : ""}: ${conteo.map(id => `${nombre(S, id)} ${d.votos[id]}`).join(" · ")}.`);
       if (d.nadie) {
         S.linchado = { id: null };
         log(S, "⚖ El pueblo no linchó a nadie.");
       } else {
         if (!vivo(S, d.id)) return NO("Tocá al más votado, o elegí «Nadie».");
-        const j = S.jugadores[d.id];
-        if (j.rol === "tonto" && !S.mem.tontoRevelado) {
-          S.mem.tontoRevelado = true;
-          S.linchado = { id: d.id, tonto: true };
-          log(S, `⚖ Votaron a ${j.nombre}, pero era el Tonto del pueblo: se salva y ya no vota.`);
-        } else {
-          S.linchado = { id: d.id };
-          log(S, `⚖ El pueblo votó a ${j.nombre}.`);
-          matar(S, d.id, "linchado");
-        }
+        S.linchado = { id: d.id };
+        log(S, `⚖ El pueblo votó a ${nombre(S, d.id)}.`);
+        matar(S, d.id, "linchado");
       }
       S.etapa = "veredicto";
       return SI;
@@ -294,10 +267,10 @@
     sacar(S, d) {
       if (!vivo(S, d.id)) return NO("Ya está muerto.");
       if (S.fase === "reparto" || S.fase === "fin") return NO("Solo durante la partida.");
-      const j = S.jugadores[d.id];
-      j.vivo = false;
-      j.muerte = { ronda: S.ronda, fase: S.fase, causa: "narrador" };
-      log(S, `✋ El narrador sacó a ${j.nombre}.`);
+      matar(S, d.id, "narrador");
+      // Que dispare el cazador o termine la partida ahora, sin esperar al próximo paso.
+      if (S.fase === "dia" && (S.etapa === "debate" || S.etapa === "votacion")) seguir(S, S.etapa);
+      else if (S.fase === "noche" && !S.cazadores.length && hayGanador(S)) seguir(S, "noche");
       return SI;
     },
 
@@ -311,6 +284,32 @@
       return SI;
     },
   };
+
+  /* ---------- Marcador entre partidas ---------- */
+  // Resultado de una partida terminada, para guardar en el marcador. null si no terminó.
+  function resultado(S) {
+    if (!S || S.fase !== "fin") return null;
+    const gano = j => S.ganador === "aldea" || S.ganador === "lobos" ? R.equipo(j.rol) === S.ganador : false;
+    return { id: S.id, ganador: S.ganador, jugadores: S.jugadores.map(j => ({ nombre: j.nombre, gano: gano(j) })) };
+  }
+
+  // Suma los resultados guardados: {partidas, equipos: {aldea, lobos}, jugadores: [{nombre, jugadas, ganadas}]}.
+  function marcador(resultados) {
+    const m = { partidas: 0, equipos: { aldea: 0, lobos: 0 }, jugadores: [] };
+    const porNombre = {};
+    resultados.forEach(r => {
+      m.partidas += 1;
+      if (r.ganador in m.equipos) m.equipos[r.ganador] += 1;
+      r.jugadores.forEach(j => {
+        const k = j.nombre.toLowerCase();
+        if (!porNombre[k]) { porNombre[k] = { nombre: j.nombre, jugadas: 0, ganadas: 0 }; m.jugadores.push(porNombre[k]); }
+        porNombre[k].jugadas += 1;
+        if (j.gano) porNombre[k].ganadas += 1;
+      });
+    });
+    m.jugadores.sort((a, b) => b.ganadas - a.ganadas || b.ganadas / b.jugadas - a.ganadas / a.jugadas || a.nombre.localeCompare(b.nombre));
+    return m;
+  }
 
   /* ---------- Juego con deshacer ---------- */
   function crearJuego(guardado) {
@@ -339,7 +338,7 @@
 
   const api = {
     VERSION, CAUSAS, opcionesPorDefecto, configPorDefecto, nuevaPartida, acciones, crearJuego,
-    pasoActual, actores, vivos, hayGanador,
+    pasoActual, actores, vivos, hayGanador, nombreRol, resultado, marcador,
   };
   raiz.LoboEstado = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

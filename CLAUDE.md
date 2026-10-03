@@ -17,24 +17,27 @@ Todo el texto de la interfaz, los commits y las respuestas van en **español rio
 | Archivo | Qué tiene |
 |---|---|
 | `js/roles.js` | `ROLES` (nombre, emoji, equipo, peso para el balance, descripción), `recomendar(n)`, `validar`, `sortear`, `ganador`, `pasosNoche`. Expone `window.LoboRoles` |
-| `js/estado.js` | Estado y acciones `(S, datos) → {ok}|{ok:false,motivo}`. `avanzar` confirma el paso de la noche o la etapa del día. `crearJuego()` agrega deshacer (máx. 80) |
+| `js/estado.js` | Estado y acciones `(S, datos) → {ok}|{ok:false,motivo}`. `avanzar` confirma el paso de la noche o la etapa del día. `crearJuego()` agrega deshacer (máx. 80). `resultado`/`marcador` para el marcador entre partidas |
 | `js/textos.js` | Frases para leer en voz alta (`NOCHE`, `DIA`, `FIN`). Editables |
-| `js/app.js` | Render completo con innerHTML + delegación de eventos por `data-a`. La selección de jugadores del paso actual vive en `sel` (no en el estado) |
-| `css/estilos.css` | Tema noche (por defecto) y día (`body[data-fase="dia"]`). Clase `.secreto` se desenfoca en modo discreto |
+| `js/app.js` | Render completo con innerHTML + delegación de eventos por `data-a`. La selección del paso actual (y los votos del contador) vive en `sel`, no en el estado |
+| `css/estilos.css` | Tema noche (por defecto), día (`body[data-fase="dia"]`) y noche oscura (`body[data-fase="oscuro"]`). Clase `.secreto` se desenfoca en modo discreto |
 
-- `localStorage`: `lobos-v1` (partida + deshacer) y `lobos-config` (jugadores, roles y opciones de la última vez).
+- `localStorage`: `lobos-v1` (partida + deshacer), `lobos-config` (jugadores, roles y opciones de la última vez),
+  `lobos-marcador` (partidas terminadas, por `id` de partida) y `lobos-reloj` (cuenta regresiva del debate).
 
 ## Flujo
-reparto → noche (anochecer, cupido*, enamorados*, vidente, protector, lobos, bruja; *solo noche 1) →
+reparto → noche (anochecer, vidente, protector, lobos) →
 día (anuncio → [cazador → disparo] → debate → votación → veredicto → [cazador → disparo]) → noche…
-Después de cada muerte disparan los cazadores pendientes y se revisa si alguien ganó.
+Después de cada muerte (también si el narrador saca a alguien) disparan los cazadores pendientes y se revisa si alguien ganó.
 
 ## Reglas decididas
-- Lobos ganan cuando son tantos como el resto. Aldea gana sin lobos. Enamorados de distinto equipo ganan si quedan solos.
-- Protector no repite (configurable). Bruja: 1 poción de vida y 1 de muerte, puede usar las dos la misma noche.
-- Anciano resiste el primer ataque de lobos. Tonto del pueblo se salva del primer linchamiento y deja de votar.
+- Lobos ganan cuando son tantos como el resto. Aldea gana sin lobos.
+- Protector no repite (configurable).
+- Maldito: si lo atacan los lobos (sin protección) no muere, pasa a `rol: "lobo"` con `origen: "maldito"` y se despierta con la manada desde la noche siguiente.
+- Votación: contador por jugador; con empate, segunda vuelta entre los empatados o decide la mesa.
+- Se sacaron bruja, cupido, anciano y tonto del pueblo (no se usaban); están en el historial de git.
 - Por defecto se llama a los roles muertos para disimular, y se revela el rol de cada muerto.
 
 ## Ideas pendientes
-- Más roles (niña, lobo blanco, alcalde con voto doble, ladrón).
-- Contador de votos por jugador. Narración con voz (speechSynthesis).
+- Más roles: secuaz, lobo cachorro, alcalde (voto doble, va con el contador), aprendiz de vidente, bufón.
+- Narración con voz (speechSynthesis).
