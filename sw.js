@@ -19,7 +19,8 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      // Solo borra cachés viejas de esta app: el dominio es compartido con las otras apps.
+      .then(ks => Promise.all(ks.filter(k => k !== CACHE && k.startsWith("lobos")).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

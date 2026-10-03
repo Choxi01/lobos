@@ -33,6 +33,7 @@ Después de cada muerte (también si el narrador saca a alguien) disparan los ca
 ## Reglas decididas
 - Lobos ganan cuando son tantos como el resto. Aldea gana sin lobos.
 - Protector no repite (configurable).
+- Primera noche tranquila (opción, apagada por defecto): los lobos solo se reconocen y no atacan.
 - Vidente solo pregunta «¿es lobo?»: pulgar arriba si es lobo, pulgar abajo si no (no ve el rol).
 - Maldito: si lo atacan los lobos (sin protección) no muere, pasa a `rol: "lobo"` con `origen: "maldito"` y se despierta con la manada desde la noche siguiente.
 - Votación: contador por jugador; con empate, segunda vuelta entre los empatados o decide la mesa.
@@ -41,4 +42,9 @@ Después de cada muerte (también si el narrador saca a alguien) disparan los ca
 
 ## Ideas pendientes
 - Más roles: secuaz, lobo cachorro, alcalde (voto doble, va con el contador), aprendiz de vidente, bufón.
-- Narración con voz (speechSynthesis).
+- Narración con voz (speechSynthesis), letra grande (A+), reparto en cadena (pasar directo al siguiente jugador),
+  debate proporcional a los vivos.
+
+## Dominio compartido
+Truco (`/TrucoApp/`) y lobos (`/lobos/`) viven en `choxi01.github.io`: comparten `localStorage` y la Cache Storage.
+Por eso las claves llevan prefijo (`lobos-*`) y `sw.js` solo borra cachés que empiezan con `lobos`. Nunca borrar datos del sitio entero.

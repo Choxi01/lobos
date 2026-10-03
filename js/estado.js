@@ -19,7 +19,7 @@
   };
 
   function opcionesPorDefecto() {
-    return { revelar: true, repetirProtegido: false, fingirMuertos: true, debate: 180, oscuro: true };
+    return { revelar: true, repetirProtegido: false, fingirMuertos: true, debate: 180, oscuro: true, primeraTranquila: false };
   }
 
   function configPorDefecto() {
@@ -71,6 +71,9 @@
   function log(S, texto) {
     S.registro.push({ r: S.ronda, f: S.fase, t: texto });
   }
+
+  // Opción: la primera noche los lobos solo se reconocen y no atacan.
+  function nocheTranquila(S) { return S.ronda === 1 && !!S.cfg.opciones.primeraTranquila; }
 
   function pasoActual(S) { return S.fase === "noche" ? S.pasos[S.i] : null; }
 
@@ -127,6 +130,7 @@
 
     lobos(S, d) {
       const l = actores(S, "lobo");
+      if (nocheTranquila(S)) { log(S, `🐺 Los lobos (${nombres(l)}) se reconocieron. Primera noche tranquila: no atacan.`); return SI; }
       if (!vivo(S, d.id)) return NO("Tocá a quién atacan los lobos.");
       if (S.jugadores[d.id].rol === "lobo") return NO("Los lobos no se pueden atacar entre ellos.");
       S.noche.victima = d.id;
@@ -338,7 +342,7 @@
 
   const api = {
     VERSION, CAUSAS, opcionesPorDefecto, configPorDefecto, nuevaPartida, acciones, crearJuego,
-    pasoActual, actores, vivos, hayGanador, nombreRol, resultado, marcador,
+    pasoActual, nocheTranquila, actores, vivos, hayGanador, nombreRol, resultado, marcador,
   };
   raiz.LoboEstado = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

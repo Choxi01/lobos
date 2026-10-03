@@ -28,7 +28,12 @@
       nota: "Tocá a quién señala. Puede elegirse a sí mismo.",
       cerrar: "Protector, cerrá los ojos.",
     }),
-    lobos: r => ({
+    lobos: (r, tranquila) => tranquila ? {
+      titulo: "Los lobos",
+      leer: "Lobos, despierten. Mírense bien: ustedes son la manada. Esta primera noche solo se reconocen; mañana empieza la cacería.",
+      nota: "Primera noche tranquila: dejá que se reconozcan unos segundos. No eligen víctima.",
+      cerrar: "Lobos, cierren los ojos.",
+    } : ({
       titulo: "Los lobos",
       leer: r === 1
         ? "Lobos, despierten. Mírense bien: ustedes son la manada. Pónganse de acuerdo en silencio… ¿a quién se comen esta noche?"
@@ -47,6 +52,7 @@
       "El pueblo se despierta con un mal presentimiento. Ojos abiertos…",
     ], r),
     sinMuertos: "…y milagrosamente esta noche no murió nadie.",
+    nocheTranquila: "…y la primera noche pasó en calma. Pero algo se movió en la oscuridad: ahora saben que hay lobos entre ustedes.",
     muerte: {
       lobos: n => `…y encuentran el cuerpo de ${n} en la plaza. Los lobos pasaron por acá.`,
       cazador: n => `¡PUM! ${n} cae bajo el disparo del cazador.`,

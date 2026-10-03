@@ -100,6 +100,15 @@ prueba("maldito convertido cuenta para la paridad", () => {
   ok(av(j)); ok(av(j)); ok(av(j, { id: 2 })); ok(av(j));
   igual([j.S.fase, j.S.ganador], ["fin", "lobos"]);
 });
+prueba("primera noche tranquila: los lobos no atacan", () => {
+  const j = partida(["lobo", "aldeano", "aldeano", "aldeano", "aldeano"], { primeraTranquila: true });
+  igual(E.nocheTranquila(j.S), true);
+  noche(j, {});
+  igual([j.S.fase, j.S.anuncio, E.vivos(j.S).length], ["dia", [], 5]);
+  ok(av(j)); ok(av(j)); ok(av(j, { nadie: true })); ok(av(j));
+  igual(E.nocheTranquila(j.S), false, "desde la segunda noche atacan");
+  ok(av(j)); igual(av(j).ok, false, "los lobos tienen que elegir víctima");
+});
 prueba("roles muertos se llaman igual para disimular", () => {
   const j = partida(["lobo", "vidente", "aldeano", "aldeano", "aldeano", "aldeano"]);
   noche(j, { vidente: { id: 0 }, lobos: { id: 1 } });

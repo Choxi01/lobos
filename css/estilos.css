@@ -88,7 +88,7 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .btn { border: 1px solid var(--linea); background: var(--vidrio2); border-radius: 12px; padding: 11px 14px; font-weight: 700; min-height: 46px; }
 .btn:disabled { opacity: .4; }
 .btn-principal { border: 0; background: var(--acento); color: var(--sobre-acento); border-radius: 12px; padding: 13px 18px; font-weight: 800; font-size: 1.05rem; min-height: 50px; }
-.btn-principal:disabled { opacity: .35; }
+.btn-principal:disabled, .btn-principal[aria-disabled="true"] { opacity: .35; }
 .btn-principal.grande { width: 100%; padding: 16px; font-size: 1.12rem; }
 .link { background: none; border: 0; padding: 4px 0; color: var(--tenue); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
 .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 3px 10px; white-space: nowrap; font-size: .85rem; color: var(--tenue); }

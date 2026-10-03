@@ -2,6 +2,7 @@
   "name": "Narrador de Lobos",
   "short_name": "Lobos",
   "lang": "es",
+  "id": "/lobos/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

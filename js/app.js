@@ -105,6 +105,7 @@
       sino("revelar", "Revelar el rol al morir", "El narrador dice qué era cada muerto.") +
       sino("fingirMuertos", "Llamar a los roles muertos", "Se los llama igual de noche para que nadie sepa quién murió.") +
       sino("repetirProtegido", "El protector puede repetir", "Proteger a la misma persona dos noches seguidas.") +
+      sino("primeraTranquila", "Primera noche tranquila", "Los lobos solo se reconocen la primera noche: no atacan.") +
       sino("oscuro", "Pantalla oscura de noche", "Fondo negro y letra tenue para que el brillo no delate nada.") +
       `<div class="opcion"><div><b>Tiempo de debate</b><small>Con cuenta regresiva durante el día.</small></div>
         <div class="seg">${[120, 180, 300, 480].map(s => `<button data-a="opt" data-k="debate" data-v="${s}" aria-pressed="${o.debate === s}">${s / 60}′</button>`).join("")}</div></div>`;
@@ -204,7 +205,7 @@
   /* ---------- Noche ---------- */
   function escenaNoche(s) {
     const p = E.pasoActual(s);
-    const tx = T.NOCHE[p](s.ronda);
+    const tx = T.NOCHE[p](s.ronda, E.nocheTranquila(s));
     const ultimo = s.i === s.pasos.length - 1;
     const actRol = { vidente: "vidente", protector: "protector", lobos: "lobo" }[p];
     const act = actRol ? E.actores(s, actRol) : [];
@@ -221,7 +222,7 @@
         const muertos = E.actores(s, "lobo").length < s.jugadores.filter(j => j.rol === "lobo").length;
         const c = s.mem.convertido;
         const nuevo = c && c.ronda === s.ronda - 1 && s.jugadores[c.id].vivo ? `<div class="fingir secreto">${T.NOCHE.convertido(esc(s.jugadores[c.id].nombre))}</div>` : "";
-        cuerpo += nuevo + (muertos ? `<p class="nota secreto">Los lobos muertos ya no se despiertan.</p>` : "") + selector(s, "lobos");
+        cuerpo += nuevo + (muertos ? `<p class="nota secreto">Los lobos muertos ya no se despiertan.</p>` : "") + (E.nocheTranquila(s) ? "" : selector(s, "lobos"));
       }
     }
 
@@ -230,7 +231,7 @@
       ${leerTxt(tx.leer)}
       ${cuerpo}
       ${tx.cerrar ? `<p class="etiqueta">Al terminar, leé:</p>${leerTxt(tx.cerrar)}` : ""}` +
-      pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : "disabled"}>${ultimo ? "☀ Amanecer" : "Siguiente →"}</button>`);
+      pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : 'aria-disabled="true"'}>${ultimo ? "☀ Amanecer" : "Siguiente →"}</button>`);
   }
 
   function resultadoVidente(s) {
@@ -267,7 +268,7 @@
     if (s.fase === "noche") {
       const p = E.pasoActual(s);
       const actRol = { vidente: "vidente", protector: "protector", lobos: "lobo" }[p];
-      if (!actRol || !E.actores(s, actRol).length) return true;
+      if (!actRol || !E.actores(s, actRol).length || (p === "lobos" && E.nocheTranquila(s))) return true;
       return sel.ids.length === 1;
     }
     if (s.fase === "dia" && (s.etapa === "cazador" || s.etapa === "votacion")) return sel.ids.length === 1 || sel.nadie;
@@ -298,7 +299,7 @@
     if (e === "anuncio") {
       const lineas = lineasMuertes(s, s.anuncio);
       h += `<h1>Amanece</h1>` + leerTxt(T.DIA.amanecer(s.ronda)) +
-        (lineas.length ? lineas.map(leerTxt).join("") : leerTxt(T.DIA.sinMuertos)) +
+        (lineas.length ? lineas.map(leerTxt).join("") : leerTxt(s.ronda === 1 && s.cfg.opciones.primeraTranquila ? T.DIA.nocheTranquila : T.DIA.sinMuertos)) +
         secretoMuertos(s.anuncio) + resumenNoche(s);
       boton = etiquetaSeguir(s, "🗣️ Pasar al debate");
     } else if (e === "cazador") {
@@ -333,7 +334,7 @@
       h += `<h1>Veredicto</h1>` + lineas.map(leerTxt).join("") + secretoMuertos(s.anuncio);
       boton = etiquetaSeguir(s, "🌙 Que caiga la noche");
     }
-    return h + pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : "disabled"}>${boton}</button>`);
+    return h + pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : 'aria-disabled="true"'}>${boton}</button>`);
   }
 
   /* ---------- Contador de votos ---------- */
@@ -683,6 +684,7 @@
         sel.segunda = lideres(s).ids; sel.votos = {}; sel.ids = []; sel.nadie = false; sel.mano = false;
         renderNarrador(); window.scrollTo(0, 0); break;
       case "siguiente":
+        if (s.etapa === "votacion" && !listo(s) && lideres(s).ids.length > 1) { aviso("Hay empate: hacé la segunda vuelta o que decida la mesa."); break; }
         hacer("avanzar", { ids: sel.ids, id: sel.ids.length ? sel.ids[0] : null, nadie: sel.nadie, votos: sel.votos, segunda: !!sel.segunda });
         break;
       case "deshacer":
