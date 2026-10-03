@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lobos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Narrador de Lobos</title>
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body data-fase="config">
+<div class="wrap">
+
+<nav class="tabs" role="tablist" aria-label="Secciones">
+  <button role="tab" data-a="tab" data-tab="narrador" aria-selected="true">Narrador</button>
+  <button role="tab" data-a="tab" data-tab="jugadores" aria-selected="false">Jugadores</button>
+  <button role="tab" data-a="tab" data-tab="roles" aria-selected="false">Roles</button>
+  <button role="tab" data-a="tab" data-tab="registro" aria-selected="false">Registro</button>
+</nav>
+
+<!-- CONFIGURACIÓN -->
+<section id="config" class="pagina" hidden>
+  <h1>Nueva partida</h1>
+
+  <div class="bloque">
+    <div class="bloque-titulo">Jugadores <span id="cuentaJug" class="cuenta"></span></div>
+    <form id="formJugador" class="agregar" autocomplete="off">
+      <input id="nuevoJugador" maxlength="300" placeholder="Nombre del jugador" enterkeyhint="done" aria-label="Nombre del jugador">
+      <button class="btn-principal">Agregar</button>
+    </form>
+    <div id="listaJug" class="chips"></div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-titulo">Roles</div>
+    <div id="recomendacion"></div>
+    <div id="listaRoles" class="lista-roles"></div>
+    <div id="balance"></div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-titulo">Opciones</div>
+    <div id="opciones" class="opciones"></div>
+  </div>
+
+  <div class="form-acciones">
+    <p id="errorConfig" class="error" hidden></p>
+    <button type="button" class="btn-principal grande" data-a="repartir">Repartir roles</button>
+    <button type="button" class="btn" data-a="volver" id="volver" hidden>Volver a la partida</button>
+  </div>
+</section>
+
+<!-- NARRADOR -->
+<section id="narrador" class="pagina">
+  <div id="barra" class="barra"></div>
+  <div id="escena"></div>
+</section>
+
+<!-- JUGADORES -->
+<section id="jugadores" class="pagina" hidden>
+  <div id="tablaJug"></div>
+</section>
+
+<!-- ROLES -->
+<section id="roles" class="pagina" hidden>
+  <div id="rolesContenido"></div>
+</section>
+
+<!-- REGISTRO -->
+<section id="registro" class="pagina" hidden>
+  <div id="reg"></div>
+</section>
+
+</div>
+
+<!-- Ver el rol en secreto (reparto) -->
+<div id="velo" class="velo" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/roles.js"></script>
+<script src="js/estado.js"></script>
+<script src="js/textos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

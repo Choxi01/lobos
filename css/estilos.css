@@ -1,0 +1,289 @@
+/* ===================== Tipografías (locales, funcionan offline) ===================== */
+@font-face { font-family: "Alegreya Sans"; font-weight: 400; font-display: swap; src: url("../fonts/alegreya-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Alegreya Sans"; font-weight: 700; font-display: swap; src: url("../fonts/alegreya-sans-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Alegreya Sans"; font-weight: 800; font-display: swap; src: url("../fonts/alegreya-sans-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "Alegreya SC"; font-weight: 700; font-display: swap; src: url("../fonts/alegreya-sc-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Alegreya SC"; font-weight: 800; font-display: swap; src: url("../fonts/alegreya-sc-latin-800-normal.woff2") format("woff2"); }
+
+/* ===================== Colores: noche (por defecto) y día ===================== */
+:root, body[data-fase="noche"] {
+  color-scheme: dark;
+  --fondo: #141a3a; --fondo2: #0b0f24; --linea: #2c3566; --linea-suave: rgba(255,255,255,.08);
+  --vidrio: rgba(0,0,0,.24); --vidrio2: rgba(255,255,255,.05);
+  --texto: #eceef8; --tenue: #9ea6cc;
+  --acento: #f1dc9c; --sobre-acento: #1d1a0b; --brillo: rgba(241,220,156,.14);
+  --sangre: #ef6b7d; --sangre-fondo: rgba(239,107,125,.12);
+  --aldea: #82d1a8; --aldea-fondo: rgba(130,209,168,.1);
+  --carta: #f7f3e8; --tinta: #1b1d22;
+}
+body[data-fase="dia"] {
+  color-scheme: light;
+  --fondo: #f8eed9; --fondo2: #efdfbf; --linea: #d8c299; --linea-suave: rgba(60,40,10,.09);
+  --vidrio: rgba(255,255,255,.5); --vidrio2: rgba(255,255,255,.35);
+  --texto: #2b2117; --tenue: #7b6748;
+  --acento: #b4531f; --sobre-acento: #fff7ec; --brillo: rgba(180,83,31,.1);
+  --sangre: #b3263a; --sangre-fondo: rgba(179,38,58,.08);
+  --aldea: #2f7a4f; --aldea-fondo: rgba(47,122,79,.09);
+}
+:root {
+  --display: "Alegreya SC", Georgia, serif;
+  --body: "Alegreya Sans", system-ui, sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; background: #0b0f24; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; padding-inline: 14px; padding-block: 0 24px;
+  background:
+    radial-gradient(50% 32% at 88% 0%, var(--brillo) 0%, transparent 70%) fixed,
+    linear-gradient(180deg, var(--fondo) 0%, var(--fondo2) 85%) fixed;
+  background-color: var(--fondo2); color: var(--texto);
+  font-family: var(--body); font-size: 16px; line-height: 1.4;
+  transition: background-color .3s;
+}
+body[data-fase="dia"] { background-color: var(--fondo2); }
+button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
+button { -webkit-user-select: none; user-select: none; cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 640px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.7rem; color: var(--acento); line-height: 1.1; }
+h1.grande { font-size: 2.3rem; }
+h2 { font-size: 1.25rem; margin: 22px 0 10px; }
+.tenue { color: var(--tenue); }
+.vacio { color: var(--tenue); text-align: center; padding: 22px 8px; border: 1px dashed var(--linea); border-radius: 14px; }
+
+/* ===================== Pestañas ===================== */
+.tabs {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  margin: 8px 0 12px; padding: 4px; border-radius: 12px;
+  background: var(--fondo2); border: 1px solid var(--linea);
+}
+.tabs button { background: none; border: 0; color: var(--tenue); padding: 9px 2px; border-radius: 8px; font-weight: 700; font-size: .92rem; }
+.tabs button[aria-selected="true"] { background: var(--acento); color: var(--sobre-acento); }
+
+/* ===================== Controles comunes ===================== */
+.seg { display: inline-flex; border: 1px solid var(--linea); border-radius: 999px; overflow: hidden; flex: none; }
+.seg button { background: none; border: 0; color: var(--tenue); padding: 9px 14px; font-weight: 700; min-height: 40px; }
+.seg button[aria-pressed="true"] { background: var(--texto); color: var(--fondo2); }
+.seg button:disabled { opacity: .35; }
+.seg.ancho { display: flex; }
+.seg.ancho button { flex: 1; }
+.btn { border: 1px solid var(--linea); background: var(--vidrio2); border-radius: 12px; padding: 11px 14px; font-weight: 700; min-height: 46px; }
+.btn:disabled { opacity: .4; }
+.btn-principal { border: 0; background: var(--acento); color: var(--sobre-acento); border-radius: 12px; padding: 13px 18px; font-weight: 800; font-size: 1.05rem; min-height: 50px; }
+.btn-principal:disabled { opacity: .35; }
+.btn-principal.grande { width: 100%; padding: 16px; font-size: 1.12rem; }
+.link { background: none; border: 0; padding: 4px 0; color: var(--tenue); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
+.chip { border: 1px solid var(--linea); border-radius: 999px; padding: 3px 10px; white-space: nowrap; font-size: .85rem; color: var(--tenue); }
+.chip.fuerte { background: var(--acento); color: var(--sobre-acento); border-color: var(--acento); font-weight: 800; }
+.nota { font-size: .92rem; color: var(--tenue); margin: 8px 0; }
+.etiqueta { font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; color: var(--tenue); margin: 14px 0 6px; }
+.error { color: var(--sangre); font-weight: 700; margin: 0; text-align: center; }
+
+/* ===================== Configuración ===================== */
+.pagina > h1 { margin: 6px 0 14px; }
+.bloque { margin-bottom: 22px; }
+.bloque-titulo { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; color: var(--tenue); margin-bottom: 10px; }
+.cuenta { color: var(--acento); }
+.agregar { display: flex; gap: 8px; }
+.agregar input { flex: 1; min-width: 0; background: var(--vidrio); border: 1px solid var(--linea); border-radius: 12px; padding: 12px; font-weight: 700; font-size: 1rem; }
+.agregar input::placeholder { color: var(--tenue); font-weight: 400; }
+.agregar .btn-principal { padding: 0 16px; min-height: 48px; font-size: 1rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.chip-jug { display: inline-flex; align-items: center; gap: 2px; background: var(--vidrio); border: 1px solid var(--linea); border-radius: 999px; padding: 4px 4px 4px 12px; font-weight: 700; }
+.chip-jug button { background: none; border: 0; color: var(--tenue); font-size: 1.15rem; line-height: 1; width: 30px; height: 30px; border-radius: 50%; }
+.chips .vacio { width: 100%; margin: 0; font-size: .92rem; }
+.reco { margin: 0 0 10px; font-size: .95rem; }
+.reco .tenue { display: block; font-size: .85rem; }
+
+.lista-roles { display: flex; flex-direction: column; gap: 6px; }
+.fila-rol { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 8px 8px 8px 10px; border-radius: 12px; background: var(--vidrio); border: 1px solid var(--linea); }
+.fila-rol.apagado { opacity: .55; }
+.fila-rol.eq-lobos { border-color: color-mix(in srgb, var(--sangre) 45%, transparent); }
+.fila-rol .emoji { font-size: 1.5rem; text-align: center; }
+.fila-rol .txt { min-width: 0; }
+.fila-rol .txt b { display: block; }
+.fila-rol .txt small { color: var(--tenue); font-size: .8rem; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.paso-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--linea); background: var(--vidrio2); font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.paso-btn:disabled { opacity: .3; }
+.cant { min-width: 26px; text-align: center; font-family: var(--display); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.cant.solo { min-width: 88px; }
+
+.balance { margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--linea); background: var(--vidrio); }
+.balance-txt { display: flex; justify-content: space-between; gap: 8px; font-size: .9rem; margin-bottom: 8px; }
+.balance-txt span { color: var(--tenue); }
+.balance-barra { display: flex; align-items: center; gap: 8px; }
+.pista { position: relative; flex: 1; height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--sangre), var(--linea) 50%, var(--aldea)); }
+.pista i { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--texto); border: 3px solid var(--fondo2); transform: translate(-50%, -50%); transition: left .25s; }
+
+.opciones { display: flex; flex-direction: column; gap: 8px; }
+.opcion { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border: 1px solid var(--linea); border-radius: 12px; background: var(--vidrio); }
+.opcion b { display: block; font-size: .95rem; }
+.opcion small { color: var(--tenue); font-size: .8rem; display: block; }
+.opcion .seg button { padding: 8px 11px; }
+.form-acciones { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+
+/* ===================== Narrador ===================== */
+.barra { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.barra .espacio { flex: 1; }
+.icono { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--linea); background: var(--vidrio2); font-size: 1.15rem; line-height: 1; }
+.paso-num { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; color: var(--tenue); margin-bottom: 4px; }
+
+.leer {
+  margin: 14px 0; padding: 14px 16px 14px 18px; border-left: 4px solid var(--acento);
+  background: var(--brillo); border-radius: 4px 14px 14px 4px;
+  font-size: 1.18rem; line-height: 1.5; font-weight: 700;
+}
+.leer::before { content: "🗣 Leé en voz alta"; display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); margin-bottom: 4px; font-weight: 800; }
+.leer + .leer::before { display: none; }
+.leer + .leer { margin-top: -6px; }
+.quien { padding: 10px 12px; border-radius: 12px; background: var(--vidrio); border: 1px solid var(--linea); font-size: 1rem; }
+.quien b { color: var(--acento); }
+.fingir { padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--linea); color: var(--tenue); font-size: .98rem; }
+.aviso { color: var(--tenue); margin: 8px 0 14px; }
+.progreso { text-align: center; color: var(--tenue); font-size: .9rem; margin: 12px 0; }
+
+.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 7px; }
+.jug { border: 1px solid var(--linea); background: var(--vidrio); border-radius: 12px; padding: 10px 6px; min-height: 52px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; overflow-wrap: anywhere; }
+.jug small { font-weight: 400; font-size: .74rem; color: var(--tenue); }
+.jug[aria-pressed="true"] { background: var(--acento); color: var(--sobre-acento); border-color: var(--acento); }
+.jug[aria-pressed="true"] small { color: var(--sobre-acento); }
+.jug:disabled { opacity: .35; }
+.jug.listo { border-color: var(--aldea); color: var(--aldea); background: var(--aldea-fondo); }
+.jug.nadie { border-style: dashed; color: var(--tenue); }
+.elegir { margin-top: 10px; }
+
+.resultado { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 12px; border-radius: 14px; border: 2px solid; font-size: 1.05rem; }
+.resultado small { display: block; font-size: .9rem; margin-top: 2px; }
+.resultado.malo { border-color: var(--sangre); background: var(--sangre-fondo); }
+.resultado.bueno { border-color: var(--aldea); background: var(--aldea-fondo); }
+.carta-emoji { font-size: 4.2rem; line-height: 1; }
+.carta-emoji.chica { font-size: 2.2rem; }
+
+.victima { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sangre-fondo); border: 1px solid var(--sangre); }
+.victima small { display: block; color: var(--tenue); }
+.pocion { margin-top: 14px; }
+.pocion-tit { font-weight: 800; margin-bottom: 6px; }
+.pocion-tit em { font-style: normal; color: var(--tenue); font-weight: 400; }
+.pocion .elegir { margin-top: 0; }
+
+.desplegable { margin-top: 16px; border: 1px solid var(--linea); border-radius: 12px; padding: 0 12px; background: var(--vidrio); }
+.desplegable summary { cursor: pointer; padding: 12px 0; font-weight: 700; color: var(--tenue); }
+.desplegable[open] { padding-bottom: 12px; }
+.lista-sel { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.fila-sel { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 700; }
+.fila-sel select { background: var(--fondo2); border: 1px solid var(--linea); border-radius: 10px; padding: 8px; max-width: 60%; }
+
+/* Reloj del debate */
+.reloj { margin: 14px 0; padding: 14px; border-radius: 16px; border: 1px solid var(--linea); background: var(--vidrio); text-align: center; }
+.reloj-num { font-family: var(--display); font-size: 4rem; line-height: 1; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+.reloj-num.poco { color: var(--sangre); }
+.reloj-num.cero { color: var(--sangre); animation: late 1s ease infinite; }
+.reloj-btns { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; }
+
+/* Pie fijo con los botones principales */
+.pie {
+  position: sticky; bottom: 0; z-index: 8; margin: 18px -14px 0;
+  padding: 14px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: auto 1fr; gap: 8px;
+  background: linear-gradient(to top, var(--fondo2) 72%, transparent);
+}
+
+/* Final */
+.final { padding: 16px; border-radius: 16px; background: var(--brillo); border: 1px solid var(--acento); }
+.final.g-lobos { background: var(--sangre-fondo); border-color: var(--sangre); }
+.final.g-lobos h1 { color: var(--sangre); }
+.final .leer { margin-bottom: 0; }
+.lista-final { display: flex; flex-direction: column; gap: 6px; }
+.fila-final { display: grid; grid-template-columns: 30px auto 1fr; gap: 4px 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--vidrio); border: 1px solid var(--linea); }
+.fila-final .emoji { font-size: 1.4rem; grid-row: span 2; }
+.fila-final span:last-of-type { color: var(--tenue); text-align: right; }
+.fila-final small { grid-column: 2 / 4; color: var(--tenue); font-size: .8rem; }
+.fila-final.gano { border-color: var(--acento); }
+.fila-final.muerto b { text-decoration: line-through; text-decoration-color: var(--tenue); }
+.acciones { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+
+/* ===================== Jugadores ===================== */
+.resumen { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.lista-jug { display: flex; flex-direction: column; gap: 6px; }
+.fila-jug { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 12px; background: var(--vidrio); border: 1px solid var(--linea); }
+.fila-jug .emoji { font-size: 1.5rem; text-align: center; }
+.fila-jug .rol { color: var(--tenue); font-size: .9rem; }
+.fila-jug.eq-lobos .rol { color: var(--sangre); }
+.fila-jug small { display: block; color: var(--tenue); font-size: .8rem; }
+.fila-jug .marcas { color: var(--acento); }
+.fila-jug.muerto { opacity: .55; }
+.fila-jug.muerto b { text-decoration: line-through; }
+.mini { border: 1px solid var(--linea); background: transparent; border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: .85rem; color: var(--tenue); min-height: 40px; }
+
+/* ===================== Roles ===================== */
+.lista-reglas { margin: 0 0 8px; padding-left: 20px; line-height: 1.55; }
+.lista-reglas li { margin-bottom: 4px; }
+.cartas-rol { display: flex; flex-direction: column; gap: 8px; }
+.carta-rol { padding: 12px; border-radius: 14px; background: var(--vidrio); border: 1px solid var(--linea); }
+.carta-rol.eq-lobos { border-color: color-mix(in srgb, var(--sangre) 55%, transparent); }
+.carta-rol header { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+.carta-rol .emoji { font-size: 2rem; }
+.carta-rol h3 { font-size: 1.15rem; }
+.carta-rol small { color: var(--tenue); font-size: .82rem; }
+.carta-rol p { margin: 0 0 6px; line-height: 1.5; }
+.carta-rol .consejo { color: var(--tenue); font-size: .92rem; margin: 0; }
+.tabla-wrap { overflow-x: auto; border: 1px solid var(--linea); border-radius: 12px; margin-bottom: 12px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--linea-suave); }
+th { font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--tenue); background: var(--vidrio); }
+td.q { color: var(--acento); font-weight: 800; }
+tr:last-child td { border-bottom: 0; }
+.nota-pie { font-size: .9rem; color: var(--tenue); line-height: 1.5; }
+
+/* ===================== Registro ===================== */
+.reg-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.reg-top h2 { margin: 0; }
+.grupo { font-size: 1rem; color: var(--acento); margin: 16px 0 6px; }
+.lista-reg { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.lista-reg li { padding: 7px 10px; border-radius: 10px; background: var(--vidrio); font-size: .93rem; line-height: 1.4; }
+.desplegable .lista-reg { margin-bottom: 4px; }
+
+/* ===================== Ver el rol en secreto ===================== */
+.velo { position: fixed; inset: 0; z-index: 50; background: var(--fondo2); display: flex; align-items: center; justify-content: center; padding: 20px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); }
+.velo-caja { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+.velo-caja p { margin: 0; line-height: 1.5; }
+.velo-caja.carta { padding: 22px 18px; border-radius: 20px; border: 2px solid var(--aldea); background: var(--aldea-fondo); }
+.velo-caja.carta.eq-lobos { border-color: var(--sangre); background: var(--sangre-fondo); }
+.velo-caja .equipo { font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; color: var(--aldea); }
+.velo-caja.eq-lobos .equipo, .velo-caja.eq-lobos h1 { color: var(--sangre); }
+
+/* ===================== Modo discreto: tapa lo secreto ===================== */
+.discreto .secreto { filter: blur(7px); user-select: none; }
+
+/* Aviso flotante */
+.toast {
+  position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60;
+  max-width: calc(100% - 28px); background: var(--texto); color: var(--fondo2); border-radius: 12px; padding: 11px 14px; font-weight: 800;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35); text-align: center;
+}
+
+@media (max-width: 380px) {
+  body { padding-inline: 10px; }
+  .pie { margin-inline: -10px; padding-inline: 10px; }
+  .grilla { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+  .leer { font-size: 1.1rem; }
+  .opcion { flex-direction: column; align-items: stretch; }
+  .opcion .seg { align-self: flex-start; }
+}
+@keyframes late { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: sube .2s ease; }
+  @keyframes sube { from { transform: translate(-50%, 8px); opacity: 0; } }
+}
+
+/* Ajustes */
+html:has(body[data-fase="dia"]) { background: #efdfbf; }
+.jug.nadie[aria-pressed="true"] { color: var(--sobre-acento); border-style: solid; }

@@ -1,0 +1,6 @@
+{
+  "name": "narrador-lobos",
+  "private": true,
+  "description": "Narrador de Lobos (Werewolf / Mafia) para el celu (PWA estática)",
+  "scripts": { "test": "node tests/reglas.test.js" }
+}
