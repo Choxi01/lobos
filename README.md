@@ -1,5 +1,7 @@
 # Narrador de Lobos
 
+**👉 Abrir la app: https://choxi01.github.io/lobos/**
+
 App para narrar partidas de **Lobos** (Werewolf / Mafia) desde el celu o la compu.
 Cargás a los jugadores, te recomienda cuántos lobos y qué roles usar, reparte los roles
 en secreto pasando el celu, y después te va guiando noche por noche y día por día:
