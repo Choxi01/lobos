@@ -88,7 +88,9 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .btn { border: 1px solid var(--linea); background: var(--vidrio2); border-radius: 12px; padding: 11px 14px; font-weight: 700; min-height: 46px; }
 .btn:disabled { opacity: .4; }
 .btn-principal { border: 0; background: var(--acento); color: var(--sobre-acento); border-radius: 12px; padding: 13px 18px; font-weight: 800; font-size: 1.05rem; min-height: 50px; }
-.btn-principal:disabled, .btn-principal[aria-disabled="true"] { opacity: .35; }
+.btn-principal:disabled { opacity: .35; }
+/* Falta elegir: se ve hueco (no relleno) para que no se confunda con el botón listo. */
+.btn-principal[aria-disabled="true"] { background: transparent; color: var(--tenue); border: 2px dashed var(--linea); font-weight: 700; }
 .btn-principal.grande { width: 100%; padding: 16px; font-size: 1.12rem; }
 .link { background: none; border: 0; padding: 4px 0; color: var(--tenue); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
 .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 3px 10px; white-space: nowrap; font-size: .85rem; color: var(--tenue); }
@@ -99,7 +101,7 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 
 /* ===================== Configuración ===================== */
 .pagina > h1 { margin: 6px 0 14px; }
-.bloque { margin-bottom: 22px; }
+.bloque { margin-bottom: 22px; scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px)); }
 .bloque-titulo { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; color: var(--tenue); margin-bottom: 10px; }
 .cuenta { color: var(--acento); }
 .agregar { display: flex; gap: 8px; }
@@ -139,6 +141,16 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .opcion b { display: block; font-size: .95rem; }
 .opcion small { color: var(--tenue); font-size: .8rem; display: block; }
 .opcion .seg button { padding: 8px 11px; }
+button.opcion { width: 100%; text-align: left; color: var(--texto); }
+button.opcion[aria-checked="true"] { border-color: color-mix(in srgb, var(--acento) 55%, var(--linea)); }
+.interruptor { flex: none; position: relative; width: 50px; height: 30px; border-radius: 99px; background: var(--linea); transition: background .2s; }
+.interruptor::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--texto); box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .2s; }
+[aria-checked="true"] > .interruptor { background: var(--acento); }
+[aria-checked="true"] > .interruptor::after { transform: translateX(20px); background: var(--sobre-acento); }
+
+/* Al tocar «Repartir» con un error, el bloque con el problema se marca un momento. */
+.bloque.marcado { animation: marcado 1.2s ease; border-radius: 14px; }
+@keyframes marcado { 0%, 60% { box-shadow: 0 0 0 3px var(--sangre); } 100% { box-shadow: 0 0 0 3px transparent; } }
 .form-acciones { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
 
 /* ===================== Narrador ===================== */
@@ -209,10 +221,14 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .reloj-num.cero { color: var(--sangre); animation: late 1s ease infinite; }
 .reloj-btns { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; }
 
-/* Pie fijo con los botones principales */
+/* Pie fijo con los botones principales: la escena ocupa toda la pantalla y el pie queda siempre abajo,
+   aunque el paso tenga poco texto, para que el pulgar lo encuentre sin mirar. */
+#narrador:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100svh - 94px - env(safe-area-inset-top, 0px)); }
+#escena { flex: 1; display: flex; flex-direction: column; }
+.etiqueta + .leer { margin-top: 0; }
 .pie {
-  position: sticky; bottom: 0; z-index: 8; margin: 18px -14px 0;
-  padding: 14px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  position: sticky; bottom: 0; z-index: 8; margin: auto -14px -24px;
+  padding: 26px 14px calc(12px + env(safe-area-inset-bottom, 0px));
   display: grid; grid-template-columns: auto 1fr; gap: 8px;
   background: linear-gradient(to top, var(--fondo2) 72%, transparent);
 }
@@ -242,6 +258,9 @@ h2 { font-size: 1.25rem; margin: 22px 0 10px; }
 .fila-jug .marcas { color: var(--acento); }
 .fila-jug.muerto { opacity: .55; }
 .fila-jug.muerto b { text-decoration: line-through; }
+.aviso-discreto { display: block; width: 100%; text-align: left; margin-bottom: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--acento); background: var(--brillo); font-size: .92rem; font-weight: 700; }
+.aviso-discreto.tapado { border-color: var(--linea); background: var(--vidrio); color: var(--tenue); }
+.aviso-discreto u { text-underline-offset: 3px; }
 .mini { border: 1px solid var(--linea); background: transparent; border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: .85rem; color: var(--tenue); min-height: 40px; }
 
 /* ===================== Roles ===================== */
@@ -296,14 +315,39 @@ tr:last-child td { border-bottom: 0; }
   .pie { margin-inline: -10px; padding-inline: 10px; }
   .grilla { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
   .leer { font-size: 1.1rem; }
-  .opcion { flex-direction: column; align-items: stretch; }
-  .opcion .seg { align-self: flex-start; }
+  .opcion.con-seg { flex-direction: column; align-items: stretch; }
+  .opcion.con-seg .seg { align-self: flex-start; }
 }
 @keyframes late { 50% { opacity: .4; } }
 @media (prefers-reduced-motion: no-preference) {
   .toast { animation: sube .2s ease; }
   @keyframes sube { from { transform: translate(-50%, 8px); opacity: 0; } }
+  /* Cambio de noche a día (y al revés): un velo del color nuevo que se desvanece. */
+  body.cambia::before { content: ""; position: fixed; inset: 0; z-index: 40; pointer-events: none; background: var(--fondo2); animation: fundido .8s ease forwards; }
+  @keyframes fundido { from { opacity: 1; } to { opacity: 0; } }
+  /* Cada paso nuevo entra subiendo un poco. */
+  #escena.entra > :not(.pie) { animation: entra .35s ease both; }
+  #escena.entra > :nth-child(2) { animation-delay: .04s; }
+  #escena.entra > :nth-child(3) { animation-delay: .08s; }
+  #escena.entra > :nth-child(n+4):not(.pie) { animation-delay: .12s; }
+  @keyframes entra { from { opacity: 0; transform: translateY(10px); } }
+  /* El rol se da vuelta como una carta. */
+  .velo-caja { animation: entra .25s ease both; }
+  .velo-caja.carta { animation: voltea .5s cubic-bezier(.2, .8, .3, 1.1) both; }
+  @keyframes voltea { from { transform: perspective(900px) rotateY(95deg); opacity: .2; } }
 }
+
+/* ===================== Noche oscura: nada que brille ===================== */
+/* Emojis sin color y apagados; la selección y el botón principal van con borde en vez de relleno. */
+body[data-fase="oscuro"] .emo,
+body[data-fase="oscuro"] .jug small,
+body[data-fase="oscuro"] .carta-emoji,
+body[data-fase="oscuro"] .emoji,
+body[data-fase="oscuro"] .chip { filter: grayscale(1) brightness(.6); }
+body[data-fase="oscuro"] .jug[aria-pressed="true"] { background: var(--brillo); color: var(--acento); border: 2px solid var(--acento); }
+body[data-fase="oscuro"] .jug[aria-pressed="true"] small { color: var(--tenue); }
+body[data-fase="oscuro"] .btn-principal:not([aria-disabled="true"]) { background: var(--brillo); color: var(--acento); border: 2px solid var(--acento); }
+body[data-fase="oscuro"] .tabs button[aria-selected="true"] { background: var(--linea); color: var(--texto); }
 
 /* Ajustes */
 html:has(body[data-fase="dia"]) { background: #efdfbf; }

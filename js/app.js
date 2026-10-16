@@ -17,6 +17,7 @@
   let sel = selVacia();
   let velo = null;           // reparto: {id, ver}
   let discreto = false;
+  let arranco = false;       // después del primer dibujo: recién ahí se anima el cambio de noche/día
   const reloj = Object.assign({ clave: null, total: 0, resta: 0, corre: false, fin: 0 }, leer(CLAVE_RELOJ) || {});
   const mar = Object.assign({ partidas: {} }, leer(CLAVE_MAR) || {}); // marcador: {partidas: {id: resultado}}
 
@@ -35,7 +36,7 @@
     sel = selVacia();
     guardar();
     render();
-    if (accion === "avanzar" || accion === "empezar") window.scrollTo(0, 0);
+    if (accion === "avanzar" || accion === "empezar") { window.scrollTo(0, 0); animar($("escena"), "entra"); }
     return r;
   }
 
@@ -47,6 +48,16 @@
     clearTimeout(avisoT);
     avisoT = setTimeout(() => (t.hidden = true), 2600);
   }
+
+  // Vuelve a disparar una animación de CSS poniendo la clase de nuevo.
+  function animar(el, clase) {
+    el.classList.remove(clase);
+    void el.offsetWidth;
+    el.classList.add(clase);
+  }
+  document.addEventListener("animationend", e => {
+    if (e.target === document.body) document.body.classList.remove("cambia");
+  });
 
   /* ---------- Navegación ---------- */
   function irA(nuevo) {
@@ -99,15 +110,16 @@
       <div class="balance-barra"><span class="lado l">🐺</span><div class="pista"><i style="left:${pos}%"></i></div><span class="lado a">🏘️</span></div></div>`;
 
     const o = cfg.opciones;
-    const sino = (k, titulo, ayuda) => `<div class="opcion"><div><b>${titulo}</b><small>${ayuda}</small></div>
-      <div class="seg"><button data-a="opt" data-k="${k}" data-v="1" aria-pressed="${!!o[k]}">Sí</button><button data-a="opt" data-k="${k}" data-v="0" aria-pressed="${!o[k]}">No</button></div></div>`;
+    // Interruptor: toda la fila se puede tocar; data-v es el valor que queda después del toque.
+    const sino = (k, titulo, ayuda) => `<button class="opcion" role="switch" aria-checked="${!!o[k]}" data-a="opt" data-k="${k}" data-v="${o[k] ? 0 : 1}">
+      <span><b>${titulo}</b><small>${ayuda}</small></span><span class="interruptor" aria-hidden="true"></span></button>`;
     $("opciones").innerHTML =
       sino("revelar", "Revelar el rol al morir", "El narrador dice qué era cada muerto.") +
       sino("fingirMuertos", "Llamar a los roles muertos", "Se los llama igual de noche para que nadie sepa quién murió.") +
       sino("repetirProtegido", "El protector puede repetir", "Proteger a la misma persona dos noches seguidas.") +
       sino("primeraTranquila", "Primera noche tranquila", "Los lobos solo se reconocen la primera noche: no atacan.") +
       sino("oscuro", "Pantalla oscura de noche", "Fondo negro y letra tenue para que el brillo no delate nada.") +
-      `<div class="opcion"><div><b>Tiempo de debate</b><small>Con cuenta regresiva durante el día.</small></div>
+      `<div class="opcion con-seg"><div><b>Tiempo de debate</b><small>Con cuenta regresiva durante el día.</small></div>
         <div class="seg">${[120, 180, 300, 480].map(s => `<button data-a="opt" data-k="debate" data-v="${s}" aria-pressed="${o.debate === s}">${s / 60}′</button>`).join("")}</div></div>`;
 
     const v = R.validar(cfg.cuentas, n);
@@ -158,7 +170,7 @@
   const leerTxt = t => t ? `<blockquote class="leer">${t}</blockquote>` : "";
   const nota = t => t ? `<p class="nota">${t}</p>` : "";
   const quien = (s, lista, prefijo) => lista.length
-    ? `<div class="quien secreto">${prefijo || (lista.length > 1 ? "Se despiertan" : "Se despierta")}: ${lista.map(j => `<b>${esc(j.nombre)}</b> ${rol(j.rol).emoji}`).join(" · ")}</div>` : "";
+    ? `<div class="quien secreto">${prefijo || (lista.length > 1 ? "Se despiertan" : "Se despierta")}: ${lista.map(j => `<b>${esc(j.nombre)}</b> <span class="emo">${rol(j.rol).emoji}</span>`).join(" · ")}</div>` : "";
 
   /* ---------- Reparto ---------- */
   function escenaReparto(s) {
@@ -231,7 +243,15 @@
       ${leerTxt(tx.leer)}
       ${cuerpo}
       ${tx.cerrar ? `<p class="etiqueta">Al terminar, leé:</p>${leerTxt(tx.cerrar)}` : ""}` +
-      pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : 'aria-disabled="true"'}>${ultimo ? "☀ Amanecer" : "Siguiente →"}</button>`);
+      pie(`${btnDeshacer()}${btnSeguir(s, ultimo ? "☀ Amanecer" : "Siguiente →")}`);
+  }
+
+  // Botón principal del paso. Si falta elegir, se ve hueco y dice qué falta (igual se puede tocar: avisa el motivo).
+  function btnSeguir(s, texto) {
+    if (listo(s)) return `<button class="btn-principal" data-a="siguiente">${texto}</button>`;
+    const votando = s.fase === "dia" && s.etapa === "votacion";
+    const falta = !votando ? "Elegí a alguien" : lideres(s).ids.length > 1 ? "Falta desempatar" : "Contá los votos";
+    return `<button class="btn-principal" data-a="siguiente" aria-disabled="true">👆 ${falta}</button>`;
   }
 
   function resultadoVidente(s) {
@@ -334,7 +354,7 @@
       h += `<h1>Veredicto</h1>` + lineas.map(leerTxt).join("") + secretoMuertos(s.anuncio);
       boton = etiquetaSeguir(s, "🌙 Que caiga la noche");
     }
-    return h + pie(`${btnDeshacer()}<button class="btn-principal" data-a="siguiente" ${listo(s) ? "" : 'aria-disabled="true"'}>${boton}</button>`);
+    return h + pie(`${btnDeshacer()}${btnSeguir(s, boton)}`);
   }
 
   /* ---------- Contador de votos ---------- */
@@ -503,7 +523,10 @@
     if (!s) { $("tablaJug").innerHTML = `<p class="vacio">Todavía no hay partida. Armala desde la pestaña Narrador.</p>` + pieMarcador; return; }
     const vivos = E.vivos(s);
     const enJuego = s.fase === "noche" || s.fase === "dia";
-    let h = `<div class="resumen">
+    let h = (enJuego ? `<button class="aviso-discreto ${discreto ? "tapado" : ""}" data-a="discreto">${discreto
+        ? "🙈 Roles tapados. <u>Mostrar</u>"
+        : "👁 Los roles están a la vista. <u>Taparlos</u> si alguien puede mirar."}</button>` : "") +
+      `<div class="resumen">
       <span class="chip">${plural(vivos.length, "vivo", "vivos")}</span>
       <span class="chip secreto">🐺 ${vivos.filter(j => j.rol === "lobo").length} lobos</span>
       <span class="chip secreto">🏘️ ${vivos.filter(j => j.rol !== "lobo").length} del pueblo</span></div>`;
@@ -600,6 +623,7 @@
     let tema = s && (s.fase === "dia" || (s.fase === "fin" && s.ganador !== "lobos")) ? "dia" : "noche";
     if (s && s.fase === "noche" && !enConfig && s.cfg.opciones.oscuro) tema = "oscuro";
     if (document.body.dataset.fase !== tema) {
+      if (arranco) animar(document.body, "cambia");
       document.body.dataset.fase = tema;
       const m = document.querySelector('meta[name="theme-color"]');
       if (m) m.content = { dia: "#efdfbf", noche: "#0b0f24", oscuro: "#000000" }[tema];
@@ -649,7 +673,16 @@
       }
       case "repartir": {
         const v = R.validar(cfg.cuentas, cfg.jugadores.length);
-        if (!v.ok) { aviso(v.motivo); $("errorConfig").hidden = false; $("errorConfig").textContent = v.motivo; break; }
+        if (!v.ok) {
+          aviso(v.motivo); $("errorConfig").hidden = false; $("errorConfig").textContent = v.motivo;
+          // Lleva al lugar del problema: los nombres si faltan jugadores, si no los roles.
+          const pocos = cfg.jugadores.length < R.MIN_JUGADORES;
+          const bloque = (pocos ? $("formJugador") : $("listaRoles")).closest(".bloque");
+          bloque.scrollIntoView({ behavior: "smooth", block: "start" });
+          animar(bloque, "marcado");
+          if (pocos) $("nuevoJugador").focus({ preventScroll: true });
+          break;
+        }
         if (s && (s.fase === "noche" || s.fase === "dia") && !confirm("Hay una partida en juego. ¿Dejarla y repartir una nueva? (Se puede deshacer.)")) break;
         juego.empezar(cfg); sel = selVacia(); discreto = true;
         guardar(); enConfig = false; irA("narrador"); render(); break;
@@ -745,4 +778,5 @@
   const h = location.hash.slice(1);
   irA(["narrador", "jugadores", "roles", "registro"].includes(h) ? h : "narrador");
   render();
+  arranco = true;
 })();
