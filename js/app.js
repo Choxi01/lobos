@@ -148,6 +148,9 @@
     if (!s) return;
     $("barra").innerHTML = barra(s);
     const f = { reparto: escenaReparto, noche: escenaNoche, dia: escenaDia, fin: escenaFin }[s.fase];
+    // Sin esto, cada toque (elegir, votar) redibuja y repite la animación de entrada: parpadea.
+    // hacer() la vuelve a poner solo cuando cambia el paso.
+    $("escena").classList.remove("entra");
     $("escena").innerHTML = f(s);
     if (s.fase === "dia" && s.etapa === "debate") prepararReloj(s);
     pintarReloj();
