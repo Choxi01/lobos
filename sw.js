@@ -5,7 +5,7 @@
 const CACHE = "lobos";
 const ESPERA = 3000;
 const ARCHIVOS = [
-  "./", "index.html", "css/estilos.css", "js/roles.js", "js/estado.js", "js/textos.js", "js/app.js",
+  "./", "index.html", "css/estilos.css", "js/roles.js", "js/estado.js", "js/textos.js", "js/app.js", "js/volver.js",
   "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png",
   "fonts/alegreya-sans-latin-400-normal.woff2", "fonts/alegreya-sans-latin-700-normal.woff2",
   "fonts/alegreya-sans-latin-800-normal.woff2", "fonts/alegreya-sc-latin-700-normal.woff2",

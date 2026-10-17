@@ -45,6 +45,10 @@ Después de cada muerte (también si el narrador saca a alguien) disparan los ca
 - Narración con voz (speechSynthesis), letra grande (A+), reparto en cadena (pasar directo al siguiente jugador),
   debate proporcional a los vivos.
 
+## Hub Choxi Juegos (2026-10-17)
+- Enlazado desde el hub https://choxi01.github.io/choxi-juegos/. `js/volver.js` es el mismo archivo en lobos y truco (equivale a `VolverAlHub.tsx` de los juegos online):
+  botón "‹ Juegos" arriba de las pestañas (si se llegó desde el hub hace "atrás") y pantalla completa con el primer toque en el celu (una vez por carga; no existe en iPhone).
+
 ## Dominio compartido
 Truco (`/TrucoApp/`) y lobos (`/lobos/`) viven en `choxi01.github.io`: comparten `localStorage` y la Cache Storage.
 Por eso las claves llevan prefijo (`lobos-*`) y `sw.js` solo borra cachés que empiezan con `lobos`. Nunca borrar datos del sitio entero.
